@@ -1,0 +1,133 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Inventory</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">{{ ctx.selectedOutlet() ? ctx.selectedOutlet()!.name + ": " : "" }}Stock on hand by product. Stock is shown in packs (strips, bottles); click a row to see its batches.</p>
+  </div>
+  <div class="flex gap-2">
+    <a routerLink="/retail/inventory/order-list" class="btn btn-ghost">Order list</a>
+    @if (canAdd) { <a routerLink="/retail/stock-count" class="btn btn-ghost">Stock count</a> }
+    <a routerLink="/retail/inventory/history" class="btn btn-ghost">Stock history</a>
+    @if (canAdd) { <a routerLink="/retail/inventory/add" class="btn btn-primary">+ Add stock</a> }
+  </div>
+</div>
+
+@if (notice()) { <p class="mt-3 rounded-xl bg-tone-lime px-3 py-2 text-xs">{{ notice() }}</p> }
+
+<section class="card mt-4">
+  <div class="flex flex-wrap items-center gap-2">
+    <label class="flex h-9 min-w-52 flex-1 items-center gap-2 rounded-full border border-line bg-white/70 px-3 text-ink-soft">
+      <app-icon name="search" [size]="14" />
+      <input type="search" placeholder="Search products…" (input)="onSearch($any($event.target).value)" class="w-full bg-transparent text-xs text-ink outline-none placeholder:text-ink-soft" />
+    </label>
+    <select class="field w-auto" (change)="filter = $any($event.target).value; changed()" aria-label="Stock filter">
+      <option value="">All products</option>
+      <option value="instock">In stock</option>
+      <option value="low">Low or out of stock</option>
+      <option value="out">Out of stock</option>
+      <option value="expiring">Expiring in 90 days / expired</option>
+    </select>
+  </div>
+
+  @if (canSetAlert) {
+    <form class="mt-2 flex flex-wrap items-center gap-2 text-xs" (submit)="$event.preventDefault(); saveAlert()">
+      <label for="alert-default">Show a product as <b>low</b> when it has</label>
+      <input id="alert-default" name="alert" type="number" min="0" class="field w-20 !py-1" [value]="alertDraft" (input)="alertDraft = +$any($event.target).value" />
+      <span>packs or fewer (0 = off).</span>
+      <button type="submit" class="btn btn-ghost !py-0.5" [disabled]="alertSaving() || alertDraft === alertDefault()">{{ alertSaving() ? 'Saving…' : 'Save' }}</button>
+      <span class="text-[11px] text-ink-soft">A product's own "Reorder at" (Products page) overrides this.</span>
+    </form>
+  }
+
+  @if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+
+  <div class="mt-3 overflow-x-auto">
+    <table class="w-full min-w-176 text-left">
+      <thead>
+        <tr class="text-[11px] text-ink-soft">
+          <th class="py-1.5 pr-3 font-normal">Product</th>
+          <th class="py-1.5 pr-3 font-normal">Schedule</th>
+          <th class="py-1.5 pr-3 font-normal">Stock (packs)</th>
+          <th class="py-1.5 pr-3 font-normal">Reorder at</th>
+          <th class="py-1.5 pr-3 font-normal">Nearest expiry</th>
+          <th class="py-1.5 pr-3 font-normal">Status</th>
+          <th class="py-1.5"></th>
+        </tr>
+      </thead>
+      <tbody [class.opacity-50]="loading()">
+        @for (r of rows(); track r.productId) {
+          <tr class="cursor-pointer border-t border-line text-xs hover:bg-chip" (click)="toggle(r)">
+            <td class="py-2 pr-3">
+              <div class="font-medium">{{ r.name }}</div>
+              <div class="text-[11px] text-ink-soft">{{ r.manufacturer }} · {{ r.unitsPerPack }} per pack</div>
+            </td>
+            <td class="py-2 pr-3"><span class="badge" [class]="scheduleClass[r.schedule]">{{ r.schedule }}</span></td>
+            <td class="py-2 pr-3 font-medium">{{ stockText(r) }}</td>
+            <td class="py-2 pr-3">{{ r.reorderEffective || '-' }}@if (r.reorderEffective && !r.reorderLevel) { <span class="text-[10px] text-ink-soft"> (shop default)</span> }</td>
+            <td class="py-2 pr-3">
+              @if (r.nearestExpiry) {
+                <span class="badge" [class]="expiryClass[r.expiryStatus ?? 'ok']">{{ r.nearestExpiry | date: 'MMM yyyy' : 'UTC' }}{{ r.expiryStatus === 'expired' ? ' · expired' : r.expiryStatus === 'soon' ? ' · soon' : '' }}</span>
+              } @else { - }
+            </td>
+            <td class="py-2 pr-3"><span class="badge" [class]="stockClass[r.stockStatus]">{{ r.stockStatus === 'out' ? 'out of stock' : r.stockStatus === 'low' ? 'low stock' : 'in stock' }}</span></td>
+            <td class="py-2 text-right text-ink-soft"><app-icon [name]="openId() === r.productId ? 'chevron-up' : 'chevron-down'" [size]="14" /></td>
+          </tr>
+          @if (openId() === r.productId) {
+            <tr class="bg-white/40">
+              <td colspan="7" class="px-3 pb-3 pt-1">
+                @if (batchLoading()) {
+                  <p class="py-2 text-xs text-ink-soft">Loading batches…</p>
+                } @else if (!batches().length) {
+                  <p class="py-2 text-xs text-ink-soft">No stock in any batch.</p>
+                } @else {
+                  <table class="w-full text-left text-xs">
+                    <thead><tr class="text-[11px] text-ink-soft">
+                      <th class="py-1 pr-3 font-normal">Batch</th><th class="py-1 pr-3 font-normal">Outlet</th><th class="py-1 pr-3 font-normal">Expiry</th>
+                      <th class="py-1 pr-3 font-normal">MRP</th><th class="py-1 pr-3 font-normal">Purchase rate</th><th class="py-1 pr-3 font-normal">Stock (packs)</th><th class="py-1"></th>
+                    </tr></thead>
+                    <tbody>
+                      @for (b of batches(); track b._id) {
+                        <tr class="border-t border-line/60">
+                          <td class="py-1 pr-3 font-medium">{{ b.batchNo }}</td>
+                          <td class="py-1 pr-3">{{ b.branchId?.name }}</td>
+                          <td class="py-1 pr-3"><span class="badge" [class]="expiryClass[b.expiryStatus]">{{ b.expiryDate | date: 'MMM yyyy' : 'UTC' }}</span></td>
+                          <td class="py-1 pr-3">{{ b.mrp | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+                          <td class="py-1 pr-3">{{ b.purchaseRate | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+                          <td class="py-1 pr-3">{{ b.packs }}{{ b.loose ? ' + ' + b.loose + ' loose' : '' }}</td>
+                          <td class="py-1 text-right whitespace-nowrap">
+                            @if (canAdd) { <button type="button" class="btn btn-ghost !px-2.5 !py-0.5" (click)="openAction('adjust', b, r.name)">Adjust</button> }
+                            @if (canTransfer) { <button type="button" class="btn btn-ghost !px-2.5 !py-0.5" (click)="openAction('transfer', b, r.name)">Transfer</button> }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                  <p class="mt-1 text-[11px] text-ink-soft">Earliest expiry first, the order used when selling (FEFO).</p>
+                }
+              </td>
+            </tr>
+          }
+        } @empty {
+          <tr>
+            <td colspan="7" class="py-10 text-center text-xs text-ink-soft">
+              @if (loading()) { Loading… } @else if (!q && !filter) { No products yet. Add products first, then add their stock. } @else { Nothing matches this filter. }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (total() > limit) {
+    <div class="mt-3 flex items-center justify-between text-xs text-ink-soft">
+      <span>Page {{ page }} of {{ pages }}</span>
+      <div class="flex gap-2">
+        <button type="button" class="btn btn-ghost" [disabled]="page <= 1" (click)="go(-1)">Previous</button>
+        <button type="button" class="btn btn-ghost" [disabled]="page >= pages" (click)="go(1)">Next</button>
+      </div>
+    </div>
+  }
+</section>
+
+@if (action(); as a) {
+  <app-batch-action-dialog [mode]="a.mode" [batch]="a.batch" [product]="a.product" (closed)="action.set(null)" (done)="actionDone($event)" />
+}

@@ -1,0 +1,39 @@
+/* Theme: Mint (default). Every theme defines the same set of variables. */
+:root,
+[data-theme='mint'] {
+  --theme-font: 'Outfit';
+
+  --bg-from: #f3f7f6;
+  --bg-to: #d2f0f3;
+  --surface: rgb(255 255 255 / 0.62);
+  --surface-solid: #f7faf9;
+  --line: rgb(11 47 46 / 0.1);
+  --chip: rgb(11 47 46 / 0.07);
+
+  --ink: #0b2f2e;
+  --ink-soft: #6a8584;
+  --brand: #083a39;
+  --brand-ink: #ffffff;
+
+  /* stat card backgrounds */
+  --tone-lime: #d9f2b3;
+  --tone-teal: #9ad7d0;
+  --tone-rose: #f0b3b6;
+  --tone-lavender: #b3b7ee;
+
+  /* donut / series colours */
+  --chart-1: #d7f0b0;
+  --chart-2: #8fd3cb;
+  --chart-3: #f1aeb4;
+  --chart-4: #cfd8d8;
+
+  /* weekly bars */
+  --bar-1: #efc79d;
+  --bar-2: #e6a3df;
+  --bar-3: #c9e78a;
+  --bar-4: #7fcfc3;
+  --bar-5: #ee9aa0;
+  --bar-6: #a9a9ee;
+  --bar-7: #f1c27d;
+  --bar-track: rgb(11 47 46 / 0.08);
+}

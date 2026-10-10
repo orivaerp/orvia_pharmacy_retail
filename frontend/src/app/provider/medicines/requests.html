@@ -1,0 +1,102 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Shop requests</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">Medicines shops could not find in the catalog. Approve to add them for everyone, or merge into an existing entry.</p>
+  </div>
+  <select class="field w-auto" (change)="setStatus($any($event.target).value)" aria-label="Filter by status">
+    <option value="pending">Pending</option>
+    <option value="approved">Approved</option>
+    <option value="merged">Merged</option>
+    <option value="rejected">Rejected</option>
+    <option value="all">All</option>
+  </select>
+</div>
+
+@if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+@if (notice()) { <p class="mt-3 rounded-xl bg-tone-lime px-3 py-2 text-xs">{{ notice() }}</p> }
+
+<div class="mt-4 space-y-3" [class.opacity-50]="loading()">
+  @for (r of items(); track r._id) {
+    <article class="card">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-medium">{{ r.name }} <span class="badge ml-1" [class]="statusClass[r.status]">{{ r.status }}</span></h2>
+          <p class="mt-0.5 text-xs text-ink-soft">
+            {{ r.composition || 'No composition given' }} · {{ r.strength || 'no strength' }} · {{ r.form }} · {{ r.manufacturer || 'unknown maker' }}
+          </p>
+          @if (r.brand || r.barcode || r.referenceMrp) {
+            <p class="mt-1 text-[11px]">
+              @if (r.brand) { Brand <b>{{ r.brand }}</b> · }
+              @if (r.barcode) { Barcode <b>{{ r.barcode }}</b> · }
+              @if (r.referenceMrp) { MRP ₹{{ r.referenceMrp }} }
+            </p>
+          }
+          <p class="mt-1 text-[11px] text-ink-soft">
+            From <b class="text-ink">{{ r.tenantId?.name ?? 'a shop' }}</b> ({{ r.requestedBy?.name ?? 'unknown' }}) · {{ r.createdAt | date: 'dd MMM yyyy' }}
+          </p>
+          @if (r.medicineId) { <p class="mt-1 text-[11px]">Catalog entry: <b>{{ r.medicineId.name }}</b></p> }
+          @if (r.reviewNote) { <p class="mt-1 text-[11px]">Note: {{ r.reviewNote }}</p> }
+        </div>
+        @if (r.status === 'pending') {
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-primary" (click)="formError.set(null); approving.set(r)">Approve</button>
+            <button type="button" class="btn btn-ghost" (click)="openMerge(r)">Merge</button>
+            <button type="button" class="btn btn-ghost" (click)="openReject(r)">Reject</button>
+          </div>
+        }
+      </div>
+    </article>
+  } @empty {
+    <p class="card text-center text-xs text-ink-soft">{{ loading() ? 'Loading…' : 'No requests here.' }}</p>
+  }
+</div>
+
+@if (approving(); as r) {
+  <app-medicine-form-dialog
+    title="Approve into catalog"
+    hint="Check the details and fill in what the shop could not know (manufacturer, HSN, GST, schedule)."
+    submitLabel="Approve and add"
+    [initial]="prefill(r)"
+    [error]="formError()"
+    [saving]="saving()"
+    (submitted)="approve($event)"
+    (closed)="approving.set(null)" />
+}
+
+@if (merging(); as r) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="merging.set(null)">
+    <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface-solid p-5 shadow-xl" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="text-lg font-medium">Merge into an existing medicine</h2>
+      <p class="mt-0.5 text-xs text-ink-soft">“{{ r.name }}” will point to the catalog entry you pick.</p>
+      @if (formError()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ formError() }}</p> }
+      <input class="field mt-3" type="search" placeholder="Search the catalog…" [value]="r.name" (input)="onMatchSearch($any($event.target).value)" />
+      <ul class="mt-2 divide-y divide-line">
+        @for (m of matches(); track m._id) {
+          <li class="flex items-center justify-between gap-3 py-2 text-xs">
+            <span><b>{{ m.name }}</b><br /><span class="text-ink-soft">{{ m.manufacturer }} · {{ m.composition.join(', ') }}</span></span>
+            <button type="button" class="btn btn-primary shrink-0" [disabled]="saving()" (click)="merge(m)">Merge</button>
+          </li>
+        } @empty {
+          <li class="py-4 text-center text-xs text-ink-soft">No matches. Try another search, or approve it as a new medicine.</li>
+        }
+      </ul>
+      <div class="mt-3 flex justify-end"><button type="button" class="btn btn-ghost" (click)="merging.set(null)">Cancel</button></div>
+    </div>
+  </div>
+}
+
+@if (rejecting(); as r) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="rejecting.set(null)">
+    <div class="w-full max-w-md rounded-2xl bg-surface-solid p-5 shadow-xl" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="text-lg font-medium">Reject “{{ r.name }}”</h2>
+      @if (formError()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ formError() }}</p> }
+      <label class="label mt-3" for="rej">Reason *</label>
+      <input id="rej" class="field" [value]="rejectNote" (input)="rejectNote = $any($event.target).value" placeholder="e.g. Duplicate of an existing brand" />
+      <p class="mt-1 text-[11px] text-ink-soft">The shop keeps its own private product either way.</p>
+      <div class="mt-3 flex justify-end gap-2">
+        <button type="button" class="btn btn-ghost" (click)="rejecting.set(null)">Cancel</button>
+        <button type="button" class="btn btn-danger" [disabled]="saving()" (click)="reject()">Reject</button>
+      </div>
+    </div>
+  </div>
+}

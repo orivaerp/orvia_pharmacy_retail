@@ -1,0 +1,141 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Products</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">{{ total() }} item{{ total() === 1 ? '' : 's' }} in your inventory list</p>
+  </div>
+  @if (canManage) { <button type="button" class="btn btn-primary" (click)="showAdd.set(true)">+ Add products</button> }
+</div>
+
+<section class="card mt-4">
+  <label class="flex h-9 max-w-md items-center gap-2 rounded-full border border-line bg-white/70 px-3 text-ink-soft">
+    <app-icon name="search" [size]="14" />
+    <input type="search" placeholder="Search your products…" (input)="onSearch($any($event.target).value)" class="w-full bg-transparent text-xs text-ink outline-none placeholder:text-ink-soft" />
+  </label>
+
+  @if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+
+  <div class="mt-3 overflow-x-auto">
+    <table class="w-full min-w-176 text-left">
+      <thead>
+        <tr class="text-[11px] text-ink-soft">
+          <th class="py-1.5 pr-3 font-normal">Product</th>
+          <th class="py-1.5 pr-3 font-normal">Form</th>
+          <th class="py-1.5 pr-3 font-normal">Schedule</th>
+          <th class="py-1.5 pr-3 font-normal">GST</th>
+          <th class="py-1.5 pr-3 font-normal">Reorder at</th>
+          <th class="py-1.5 pr-3 font-normal">Location</th>
+          <th class="py-1.5 pr-3 font-normal">Status</th>
+          <th class="py-1.5"></th>
+        </tr>
+      </thead>
+      <tbody [class.opacity-50]="loading()">
+        @for (p of items(); track p._id) {
+          <tr class="border-t border-line text-xs" [class.opacity-60]="!p.isActive">
+            <td class="py-2 pr-3">
+              <div class="font-medium">{{ p.name }}</div>
+              <div class="text-[11px] text-ink-soft">{{ p.composition.join(', ') }} · {{ p.manufacturer }}</div>
+            </td>
+            <td class="py-2 pr-3">{{ p.form }}<div class="text-[11px] text-ink-soft">{{ p.strength }}</div></td>
+            <td class="py-2 pr-3"><span class="badge" [class]="scheduleClass[p.schedule]">{{ p.schedule }}</span></td>
+            <td class="py-2 pr-3">{{ p.gstPercent }}%</td>
+            <td class="py-2 pr-3">{{ p.reorderLevel }}</td>
+            <td class="py-2 pr-3">{{ p.location || '-' }}</td>
+            <td class="py-2 pr-3">
+              @if (!p.isActive) { <span class="badge bg-chip">inactive</span> }
+              @else if (p.isCustom) { <span class="badge bg-tone-rose" title="Private product, not in the Orvia catalog">custom</span> }
+              @else { <span class="badge bg-tone-lime">catalog</span> }
+            </td>
+            <td class="py-2 text-right">@if (canManage) { <button type="button" class="btn btn-ghost" (click)="openEdit(p)">Edit</button> }</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="8" class="py-10 text-center text-xs text-ink-soft">
+              @if (loading()) { Loading… } @else if (q) { No product matches “{{ q }}”. } @else { Your inventory list is empty. Use “Add products” to pick medicines from the Orvia catalog. }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (total() > limit) {
+    <div class="mt-3 flex items-center justify-between text-xs text-ink-soft">
+      <span>Page {{ page }} of {{ pages }}</span>
+      <div class="flex gap-2">
+        <button type="button" class="btn btn-ghost" [disabled]="page <= 1" (click)="go(-1)">Previous</button>
+        <button type="button" class="btn btn-ghost" [disabled]="page >= pages" (click)="go(1)">Next</button>
+      </div>
+    </div>
+  }
+</section>
+
+@if (showAdd()) {
+  <app-add-products-dialog (closed)="showAdd.set(false)" (changed)="load()" />
+}
+
+@if (editing(); as p) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="editing.set(null)">
+    <div class="w-full max-h-[92vh] max-w-md overflow-y-auto rounded-2xl bg-surface-solid p-5 shadow-xl" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="text-lg font-medium">{{ p.name }}</h2>
+      <p class="text-xs text-ink-soft">Your settings for this product.</p>
+      @if (formError()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ formError() }}</p> }
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <div><label class="label" for="s-max">Maximum (packs to order up to)</label><input id="s-max" type="number" min="0" class="field" [value]="max" (input)="max = +$any($event.target).value" /></div>
+        <div><label class="label" for="s-re">Reorder level</label><input id="s-re" type="number" min="0" class="field" [value]="reorder" (input)="reorder = +$any($event.target).value" /></div>
+        <div><label class="label" for="s-loc">Rack / location</label><input id="s-loc" class="field" [value]="location" (input)="location = $any($event.target).value" placeholder="e.g. A2" /></div>
+        <div class="sm:col-span-2"><label class="label" for="s-ref">Refill reminder: days one pack lasts (0 = off)</label><input id="s-ref" type="number" min="0" max="365" class="field" [value]="refillDays" (input)="refillDays = +$any($event.target).value" /><p class="mt-0.5 text-[11px] text-ink-soft">For regular medicines (sugar, BP, thyroid). Set it to 30 for a strip that lasts a month, and Orvia will list customers whose supply is running out under Refills.</p></div>
+        <label class="flex items-center gap-2 text-xs sm:col-span-2"><input type="checkbox" class="accent-(--brand)" [checked]="loose" (change)="loose = $any($event.target).checked" /> Sell loose (single units from a strip)</label>
+        <label class="flex items-center gap-2 text-xs sm:col-span-2"><input type="checkbox" class="accent-(--brand)" [checked]="active" (change)="active = $any($event.target).checked" /> Active (can be sold and purchased)</label>
+      </div>
+      <div class="mt-4 border-t border-line pt-3">
+        <h3 class="text-sm font-medium">Barcodes</h3>
+        <ul class="mt-1 divide-y divide-line text-xs">
+          @for (b of catalogCodes(); track b) { <li class="flex items-center justify-between py-1.5"><span>{{ b }}</span><span class="text-ink-soft">from the catalog</span></li> }
+          @for (b of p.ownBarcodes ?? []; track b) {
+            <li class="flex items-center justify-between py-1.5">
+              <span>{{ b }} <span class="text-ink-soft">saved by your shop</span></span>
+              @if (canManage) { <button type="button" class="btn btn-ghost !px-2.5 !py-0.5" [disabled]="codeBusy()" (click)="removeCode(b)" [attr.aria-label]="'Remove barcode ' + b">Remove</button> }
+            </li>
+          } @empty { @if (!catalogCodes().length) { <li class="py-1.5 text-ink-soft">No barcode yet. Scan one at the counter, or add it below.</li> } }
+        </ul>
+        @if (canManage) {
+          <div class="mt-2 flex gap-2">
+            <input class="field !py-1" placeholder="Scan or type a barcode" aria-label="New barcode" inputmode="numeric" [value]="newCode()" (input)="newCode.set($any($event.target).value)" (keydown.enter)="addCode(); $event.preventDefault()" />
+            <button type="button" class="btn btn-ghost" [disabled]="codeBusy() || !newCode().trim()" (click)="addCode()">Add</button>
+          </div>
+        }
+      </div>
+      @if (canManage || p.barcodes.length) {
+        <div class="mt-3 border-t border-line pt-3">
+          <h3 class="text-sm font-medium">Print labels</h3>
+          @if (!p.barcodes.length) {
+            <p class="mt-1 text-xs text-ink-soft">This product has no barcode. Make your shop's own, stick it on the pack, and it scans at the counter.</p>
+            @if (canManage) { <button type="button" class="btn btn-primary mt-2" [disabled]="codeBusy()" (click)="makeCode()">Make a barcode for this product</button> }
+          } @else {
+            <div class="mt-2 grid gap-2 sm:grid-cols-2">
+              <div class="sm:col-span-2">
+                <label class="label" for="l-code">Barcode</label>
+                <select id="l-code" class="field !py-1" [value]="labelCode" (change)="labelCode = $any($event.target).value">
+                  @for (b of p.barcodes; track b) { <option [value]="b" [disabled]="!printable(b)" [selected]="b === labelCode">{{ b }}{{ printable(b) ? '' : ' (cannot be printed here)' }}</option> }
+                </select>
+              </div>
+              <div><label class="label" for="l-n">Copies</label><input id="l-n" type="number" min="1" max="500" class="field !py-1" [value]="copies" (input)="copies = +$any($event.target).value" /></div>
+              <div><label class="label" for="l-m">MRP on label (₹, 0 = none)</label><input id="l-m" type="number" min="0" class="field !py-1" [value]="labelMrp" (input)="labelMrp = +$any($event.target).value" /></div>
+              <div class="sm:col-span-2">
+                <label class="label" for="l-s">Paper</label>
+                <select id="l-s" class="field !py-1" (change)="labelSize = $any($event.target).value">
+                  @for (z of sizes; track z.id) { <option [value]="z.id" [selected]="z.id === labelSize">{{ z.label }}</option> }
+                </select>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary mt-2" (click)="printNow()">Print labels</button>
+          }
+        </div>
+      }
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" class="btn btn-ghost" (click)="editing.set(null)">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+      </div>
+    </div>
+  </div>
+}

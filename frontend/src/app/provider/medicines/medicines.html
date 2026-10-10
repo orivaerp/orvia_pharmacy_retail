@@ -1,0 +1,128 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Medicine Master</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">{{ total() }} medicine{{ total() === 1 ? '' : 's' }} in the common catalog that every shop picks from</p>
+  </div>
+  <div class="flex gap-2">
+    <button type="button" class="btn btn-ghost" (click)="showImport.set(true)">Import CSV</button>
+    <button type="button" class="btn btn-primary" (click)="openAdd()">+ Add medicine</button>
+  </div>
+</div>
+
+<section class="card mt-4">
+  <div class="flex flex-wrap items-center gap-2">
+    <label class="flex h-9 min-w-52 flex-1 items-center gap-2 rounded-full border border-line bg-white/70 px-3 text-ink-soft">
+      <app-icon name="search" [size]="14" />
+      <input type="search" placeholder="Search name, salt, manufacturer or barcode…" (input)="onSearch($any($event.target).value)" class="w-full bg-transparent text-xs text-ink outline-none placeholder:text-ink-soft" />
+    </label>
+    <select class="field w-auto" (change)="form = $any($event.target).value; filtersChanged()" aria-label="Filter by form">
+      <option value="">All forms</option>
+      @for (f of forms; track f) { <option [value]="f">{{ f }}</option> }
+    </select>
+    <select class="field w-auto" (change)="status = $any($event.target).value; filtersChanged()" aria-label="Filter by status">
+      <option value="">All statuses</option>
+      <option value="verified">verified</option>
+      <option value="pending">pending</option>
+      <option value="inactive">inactive</option>
+    </select>
+  </div>
+
+  @if (notice()) { <p class="mt-3 rounded-xl bg-tone-lime px-3 py-2 text-xs">{{ notice() }}</p> }
+
+  @if (selected().size || (hasFilter && total() > 0)) {
+    <div class="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-white/50 px-3 py-2 text-xs">
+      @if (selected().size) {
+        <b>{{ selected().size }} selected</b>
+        <button type="button" class="btn btn-primary" [disabled]="bulkBusy()" (click)="setStatus('verified', 'selected')">Verify selected</button>
+        <button type="button" class="btn btn-ghost" [disabled]="bulkBusy()" (click)="setStatus('inactive', 'selected')">Deactivate selected</button>
+        <button type="button" class="btn btn-ghost" (click)="selected.set(newSet())">Clear</button>
+      }
+      @if (hasFilter && total() > 0) {
+        <span class="ml-auto text-ink-soft">All {{ total() }} matching the filter:</span>
+        <button type="button" class="btn btn-ghost" [disabled]="bulkBusy()" (click)="setStatus('verified', 'filter')">Verify all</button>
+      }
+    </div>
+  }
+
+  @if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+
+  <div class="mt-3 overflow-x-auto">
+    <table class="w-full min-w-176 text-left">
+      <thead>
+        <tr class="text-[11px] text-ink-soft">
+          <th class="w-6 py-1.5 pr-2"><input type="checkbox" class="accent-(--brand)" aria-label="Select all on this page" [checked]="allOnPageSelected" (change)="toggleAll($any($event.target).checked)" /></th>
+          <th class="py-1.5 pr-3 font-normal">Medicine</th>
+          <th class="py-1.5 pr-3 font-normal">Form</th>
+          <th class="py-1.5 pr-3 font-normal">Manufacturer</th>
+          <th class="py-1.5 pr-3 font-normal">Schedule</th>
+          <th class="py-1.5 pr-3 font-normal">GST</th>
+          <th class="py-1.5 pr-3 font-normal">Status</th>
+          <th class="py-1.5"></th>
+        </tr>
+      </thead>
+      <tbody [class.opacity-50]="loading()">
+        @for (m of items(); track m._id) {
+          <tr class="border-t border-line text-xs">
+            <td class="py-2 pr-2"><input type="checkbox" class="accent-(--brand)" [attr.aria-label]="'Select ' + m.name" [checked]="selected().has(m._id)" (change)="toggleOne(m._id, $any($event.target).checked)" /></td>
+            <td class="py-2 pr-3">
+              <div class="font-medium">{{ m.name }}@if (m.brand) { <span class="badge ml-1 bg-tone-lavender">{{ m.brand }}</span> }</div>
+              <div class="text-[11px] text-ink-soft">{{ m.composition.join(', ') }}{{ m.category ? ' · ' + m.category : '' }}</div>
+            </td>
+            <td class="py-2 pr-3">{{ m.form }}<div class="text-[11px] text-ink-soft">{{ m.strength }}</div></td>
+            <td class="py-2 pr-3">{{ m.manufacturer }}</td>
+            <td class="py-2 pr-3"><span class="badge" [class]="scheduleClass[m.schedule]">{{ m.schedule }}</span></td>
+            <td class="py-2 pr-3">{{ m.gstPercent }}%</td>
+            <td class="py-2 pr-3"><span class="badge" [class]="m.status === 'verified' ? 'bg-tone-lime' : m.status === 'pending' ? 'bg-tone-lavender' : 'bg-chip'">{{ m.status }}</span></td>
+            <td class="py-2 text-right whitespace-nowrap"><button type="button" class="btn btn-ghost" (click)="openSalt(m)">Same salt</button> <button type="button" class="btn btn-ghost" (click)="openEdit(m)">Edit</button></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="py-10 text-center text-xs text-ink-soft">{{ loading() ? 'Loading…' : 'No medicines found. Add one or import a CSV.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (total() > limit) {
+    <div class="mt-3 flex items-center justify-between text-xs text-ink-soft">
+      <span>Page {{ page }} of {{ pages }}</span>
+      <div class="flex gap-2">
+        <button type="button" class="btn btn-ghost" [disabled]="page <= 1" (click)="go(-1)">Previous</button>
+        <button type="button" class="btn btn-ghost" [disabled]="page >= pages" (click)="go(1)">Next</button>
+      </div>
+    </div>
+  }
+</section>
+
+@if (editing()) {
+  <app-medicine-form-dialog
+    [title]="editTarget ? 'Edit medicine' : 'Add medicine'"
+    [initial]="editTarget"
+    [error]="formError()"
+    [saving]="saving()"
+    (submitted)="save($event)"
+    (closed)="editing.set(null)" />
+}
+
+@if (showImport()) {
+  <app-import-dialog (closed)="showImport.set(false)" (finished)="showImport.set(false); filtersChanged()" />
+}
+
+@if (saltOf(); as m) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="saltOf.set(null)">
+    <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface-solid p-5 shadow-xl" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="text-lg font-medium">Same salt as {{ m.name }}</h2>
+      <p class="mt-0.5 text-xs text-ink-soft">Brands and generics with the same salts ({{ m.composition.join(', ') }}), strength and form. These are the substitutes shops can offer.</p>
+      <ul class="mt-3 divide-y divide-line text-xs">
+        @for (s of saltList(); track s._id) {
+          <li class="flex items-center justify-between gap-3 py-2">
+            <span><b>{{ s.name }}</b>@if (s.brand) { <span class="badge ml-1 bg-tone-lavender">{{ s.brand }}</span> }<br /><span class="text-ink-soft">{{ s.manufacturer }}</span></span>
+            <span class="badge" [class]="s.status === 'verified' ? 'bg-tone-lime' : s.status === 'pending' ? 'bg-tone-lavender' : 'bg-chip'">{{ s.status }}</span>
+          </li>
+        } @empty {
+          <li class="py-6 text-center text-ink-soft">{{ saltLoading() ? 'Looking…' : 'No other medicine with the same salt, strength and form.' }}</li>
+        }
+      </ul>
+      <div class="mt-3 flex justify-end"><button type="button" class="btn btn-ghost" (click)="saltOf.set(null)">Close</button></div>
+    </div>
+  </div>
+}

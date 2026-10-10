@@ -1,0 +1,101 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Staff</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">People who work in your shop. Each person can use only the outlets you give them.</p>
+  </div>
+  @if (canManage()) { <button type="button" class="btn btn-primary" (click)="openAdd()">+ Add staff</button> }
+</div>
+
+@if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+@if (notice()) { <p class="mt-3 rounded-xl bg-tone-lime px-3 py-2 text-xs">{{ notice() }}</p> }
+
+@if (inviteUrl()) {
+  <div class="card mt-3">
+    <p class="text-xs font-medium">Password link (works once, valid for 7 days)</p>
+    <div class="mt-2 flex gap-2">
+      <input class="field" readonly [value]="inviteUrl()" (focus)="$any($event.target).select()" />
+      <button type="button" class="btn btn-primary shrink-0" (click)="copy()">Copy</button>
+    </div>
+    @if (emailed()) {
+      <p class="mt-1 text-[11px] text-ink-soft">We have also emailed this link to them. You can copy it too. Anyone with the link can set the password, so share it privately.</p>
+    } @else {
+      <p class="mt-1 text-[11px] text-ink-soft">Email is not set up, so send it to the person yourself (WhatsApp, SMS). Anyone with the link can set the password, so share it privately.</p>
+    }
+  </div>
+}
+
+<section class="card mt-3">
+  <div class="overflow-x-auto" [class.opacity-50]="loading()">
+    <table class="w-full min-w-176 text-left">
+      <thead>
+        <tr class="text-[11px] text-ink-soft">
+          <th class="py-1.5 pr-3 font-normal">Name</th>
+          <th class="py-1.5 pr-3 font-normal">Role</th>
+          <th class="py-1.5 pr-3 font-normal">Outlets</th>
+          <th class="py-1.5 pr-3 font-normal">Last sign-in</th>
+          <th class="py-1.5 pr-3 font-normal">Status</th>
+          <th class="py-1.5"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of users(); track u._id) {
+          <tr class="border-t border-line text-xs" [class.opacity-60]="!u.isActive">
+            <td class="py-2 pr-3"><span class="font-medium">{{ u.name }}</span><div class="text-[11px] text-ink-soft">{{ u.email }}</div></td>
+            <td class="py-2 pr-3">{{ roleLabel(u.role) }}</td>
+            <td class="py-2 pr-3">{{ outletNames(u) }}</td>
+            <td class="py-2 pr-3">{{ u.lastLoginAt ? (u.lastLoginAt | date: 'dd MMM, HH:mm') : 'Not yet' }}</td>
+            <td class="py-2 pr-3"><span class="badge" [class]="u.isActive ? 'bg-tone-lime' : 'bg-chip'">{{ u.isActive ? 'active' : 'inactive' }}</span></td>
+            <td class="py-2 text-right whitespace-nowrap">
+              @if (canManage() && u.role !== 'shop_owner') {
+                <button type="button" class="btn btn-ghost" (click)="openEdit(u)">Edit</button>
+                <button type="button" class="btn btn-ghost" [disabled]="sendingId() !== null" (click)="newLink(u)">{{ sendingId() === u._id ? 'Sending…' : 'Password link' }}</button>
+                <button type="button" class="btn btn-ghost" (click)="toggleActive(u)">{{ u.isActive ? 'Deactivate' : 'Reactivate' }}</button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="py-8 text-center text-xs text-ink-soft">{{ loading() ? 'Loading…' : 'No staff yet.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (editing()) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="editing.set(null)">
+    <div class="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface-solid p-5 shadow-xl" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="text-lg font-medium">{{ editTarget ? 'Edit staff' : 'Add staff' }}</h2>
+      @if (formError()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ formError() }}</p> }
+
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <div><label class="label" for="s-name">Name *</label><input id="s-name" class="field" [value]="name" (input)="name = $any($event.target).value" /></div>
+        <div>
+          <label class="label" for="s-email">Email * <span class="font-normal">{{ editTarget ? '(cannot change)' : '(their login)' }}</span></label>
+          <input id="s-email" type="email" class="field" [value]="email" [disabled]="!!editTarget" (input)="email = $any($event.target).value" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="label" for="s-role">Role *</label>
+          <select id="s-role" class="field" (change)="role = $any($event.target).value">
+            @for (r of roles; track r.id) { <option [value]="r.id" [selected]="r.id === role">{{ r.label }}</option> }
+          </select>
+          <p class="mt-1 text-[11px] text-ink-soft">{{ roles.find(r => r.id === role)?.hint }}</p>
+        </div>
+        <fieldset class="sm:col-span-2">
+          <legend class="label">Outlets this person can use *</legend>
+          <div class="flex flex-wrap gap-x-4 gap-y-1.5">
+            @for (o of ctx.choices(); track o._id) {
+              <label class="flex items-center gap-2 text-xs">
+                <input type="checkbox" class="accent-(--brand)" [checked]="picked().has(o._id)" (change)="togglePick(o._id, $any($event.target).checked)" /> {{ o.name }}
+              </label>
+            } @empty { <span class="text-xs text-ink-soft">No outlets yet.</span> }
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" class="btn btn-ghost" (click)="editing.set(null)">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="save()">{{ busy() ? 'Saving…' : editTarget ? 'Save changes' : 'Add staff' }}</button>
+      </div>
+    </div>
+  </div>
+}

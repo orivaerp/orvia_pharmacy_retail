@@ -1,0 +1,138 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Outlets</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">Your pharmacy locations. Stock, staff and bills belong to an outlet.</p>
+  </div>
+  @if (canManage) {
+    <button type="button" class="btn btn-primary" [disabled]="atLimit()" (click)="openAdd()">+ Add outlet</button>
+  }
+</div>
+
+@if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+@if (notice()) { <p class="mt-3 rounded-xl bg-tone-lime px-3 py-2 text-xs">{{ notice() }}</p> }
+
+<!-- plan usage -->
+@if (usage(); as u) {
+  <section class="card mt-3">
+    <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+      <span>
+        <b class="text-sm">{{ u.outlets.used }}</b> of <b class="text-sm">{{ u.outlets.limit ?? 'unlimited' }}</b> outlets used
+        <span class="text-ink-soft">· {{ u.plan?.name ?? 'No plan' }} plan{{ u.extraOutlets ? ' + ' + u.extraOutlets + ' extra granted' : '' }}</span>
+      </span>
+      @if (atLimit() && canManage && !u.pendingRequest) {
+        <button type="button" class="btn btn-ghost" (click)="openRequest()">Request more outlets</button>
+      }
+    </div>
+    <div class="mt-2 h-2 rounded-full bg-chip">
+      <div class="h-2 rounded-full" [class]="atLimit() ? 'bg-red-500' : 'bg-brand'" [style.width.%]="usedPct()"></div>
+    </div>
+    @if (atLimit()) {
+      <p class="mt-2 text-[11px] text-ink-soft">
+        Your plan allows {{ u.outlets.limit }} outlet{{ u.outlets.limit === 1 ? '' : 's' }}. To add another, close one you no longer use or request more from Orvia.
+      </p>
+    }
+    @if (u.pendingRequest) {
+      <p class="mt-2 rounded-xl bg-tone-lavender px-3 py-2 text-xs">
+        Request for {{ u.pendingRequest.count }} more outlet{{ u.pendingRequest.count === 1 ? '' : 's' }} sent {{ u.pendingRequest.at | date: 'dd MMM' }}. Waiting for the provider.
+      </p>
+    }
+    @for (r of requests().slice(0, 1); track r._id) {
+      @if (r.status === 'rejected') {
+        <p class="mt-2 rounded-xl bg-tone-rose px-3 py-2 text-xs">Your last request was declined: {{ r.reviewNote }}</p>
+      }
+    }
+  </section>
+}
+
+<!-- outlet cards -->
+<div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3" [class.opacity-50]="loading()">
+  @for (o of outlets(); track o._id) {
+    <article class="card flex flex-col" [class.opacity-70]="!o.isActive">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h2 class="flex items-center gap-1.5 text-base font-medium"><app-icon name="pin" [size]="15" /> {{ o.name }}</h2>
+          <p class="mt-0.5 text-[11px] text-ink-soft">Code {{ o.code }}</p>
+        </div>
+        <span class="badge" [class]="o.isActive ? 'bg-tone-lime' : 'bg-chip'">{{ o.isActive ? 'active' : 'inactive' }}</span>
+      </div>
+
+      <p class="mt-2 text-xs text-ink-soft">
+        {{ addressLine(o) }}
+        @if (o.phone) { <br />{{ o.phone }} }
+      </p>
+
+      <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+        <dt class="text-ink-soft">Drug licence</dt>
+        <dd>
+          {{ o.drugLicenseNo || 'Not added' }}
+          @if (licenceState(o); as s) { <span class="badge ml-1" [class]="s === 'expired' ? 'bg-tone-rose' : 'bg-tone-lavender'">{{ s === 'expired' ? 'expired' : 'expires soon' }}</span> }
+        </dd>
+        <dt class="text-ink-soft">GSTIN</dt><dd>{{ o.gstin || 'Not added' }}</dd>
+        <dt class="text-ink-soft">Pharmacist</dt><dd>{{ o.pharmacistName || 'Not added' }}</dd>
+        <dt class="text-ink-soft">Stock</dt><dd>{{ o.stockProducts ?? 0 }} product{{ o.stockProducts === 1 ? '' : 's' }}</dd>
+        <dt class="text-ink-soft">Staff</dt><dd>{{ o.staff ?? 0 }} assigned</dd>
+      </dl>
+
+      @if (canManage) {
+        <div class="mt-4 flex gap-2">
+          <button type="button" class="btn btn-ghost" (click)="openEdit(o)">Edit</button>
+          @if (o.isActive) {
+            <button type="button" class="btn btn-ghost" (click)="askClose(o)">Close outlet</button>
+          } @else {
+            <button type="button" class="btn btn-ghost" (click)="reopen(o)">Reopen</button>
+          }
+        </div>
+      }
+    </article>
+  } @empty {
+    <p class="text-xs text-ink-soft">{{ loading() ? 'Loading…' : 'No outlets yet.' }}</p>
+  }
+</div>
+
+@if (editing()) {
+  <app-outlet-form-dialog
+    [title]="editTarget ? 'Edit outlet' : 'Add outlet'"
+    [submitLabel]="editTarget ? 'Save changes' : 'Add outlet'"
+    [initial]="editTarget"
+    [error]="formError()"
+    [saving]="saving()"
+    (submitted)="save($event)"
+    (closed)="editing.set(null)" />
+}
+
+@if (closing(); as o) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="closing.set(null)">
+    <div class="w-full max-w-md rounded-2xl bg-surface-solid p-5 shadow-xl" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="text-lg font-medium">Close “{{ o.name }}”?</h2>
+      <p class="mt-1 text-xs text-ink-soft">
+        The outlet is hidden from billing and stock entry, and stops counting toward your plan limit. Its history is kept and you can reopen it later.
+        An outlet that still holds stock cannot be closed: transfer or write off the stock first.
+      </p>
+      @if (closeError()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ closeError() }}</p> }
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" class="btn btn-ghost" (click)="closing.set(null)">Cancel</button>
+        <button type="button" class="btn btn-danger" [disabled]="saving()" (click)="confirmClose()">Close outlet</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (requesting()) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="requesting.set(false)">
+    <div class="w-full max-w-md rounded-2xl bg-surface-solid p-5 shadow-xl" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="text-lg font-medium">Request more outlets</h2>
+      <p class="mt-0.5 text-xs text-ink-soft">The provider reviews your request and raises your limit, or suggests a plan upgrade.</p>
+      @if (formError()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ formError() }}</p> }
+      <label class="label mt-3" for="rq-count">How many more outlets?</label>
+      <select id="rq-count" class="field" (change)="requestCount = +$any($event.target).value">
+        @for (n of [1, 2, 3, 4, 5]; track n) { <option [value]="n">{{ n }}</option> }
+      </select>
+      <label class="label mt-3" for="rq-note">Note <span class="font-normal">(optional)</span></label>
+      <input id="rq-note" class="field" [value]="requestNote" (input)="requestNote = $any($event.target).value" placeholder="e.g. Opening two new stores next month" />
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" class="btn btn-ghost" (click)="requesting.set(false)">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="sendRequest()">{{ saving() ? 'Sending…' : 'Send request' }}</button>
+      </div>
+    </div>
+  </div>
+}

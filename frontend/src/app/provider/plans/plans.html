@@ -1,0 +1,96 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Plans</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">Limits and features are enforced by the server for every shop on the plan.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openNew()">+ New plan</button>
+</div>
+
+@if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+
+<div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  @for (p of plans(); track p._id) {
+    <article class="card flex flex-col" [class.opacity-60]="!p.isActive">
+      <div class="flex items-start justify-between gap-2">
+        <h2 class="text-base font-medium">{{ p.name }}</h2>
+        @if (!p.isActive) { <span class="badge bg-chip">inactive</span> }
+      </div>
+      <p class="mt-2 text-2xl font-medium">{{ p.price | currency: 'INR' : 'symbol' : '1.0-0' }}<span class="text-xs font-normal text-ink-soft"> / {{ p.cycle === 'yearly' ? 'year' : 'month' }}</span></p>
+      @if (p.trialDays > 0) { <p class="text-[11px] text-ink-soft">{{ p.trialDays }}-day free trial</p> }
+      <dl class="mt-3 grid grid-cols-[1fr_auto] gap-y-1 text-xs">
+        <dt class="text-ink-soft">Outlets</dt><dd>{{ limit(p.maxOutlets) }}</dd>
+        <dt class="text-ink-soft">Users</dt><dd>{{ limit(p.maxUsers) }}</dd>
+        <dt class="text-ink-soft">Products</dt><dd>{{ limit(p.maxProducts ?? null) }}</dd>
+        <dt class="text-ink-soft">Bills per month</dt><dd>{{ limit(p.maxBillsPerMonth ?? null) }}</dd>
+      </dl>
+      <ul class="mt-3 flex flex-1 flex-wrap content-start gap-1">
+        @for (f of p.features; track f) { <li class="badge bg-tone-lime">{{ featureLabels[f] }}</li> }
+        @empty { <li class="text-[11px] text-ink-soft">No extra features</li> }
+      </ul>
+      <button type="button" class="btn btn-ghost mt-4" (click)="openEdit(p)">Edit</button>
+    </article>
+  } @empty {
+    <p class="text-xs text-ink-soft">{{ loading() ? 'Loading…' : 'No plans yet.' }}</p>
+  }
+</div>
+
+@if (editingId() !== null) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="editingId.set(null)">
+    <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface-solid p-5 shadow-xl" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="text-lg font-medium">{{ editingId() ? 'Edit plan' : 'New plan' }}</h2>
+      @if (formError()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ formError() }}</p> }
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="mt-4 grid gap-3 sm:grid-cols-2" novalidate>
+        <div><label class="label" for="p-name">Name *</label><input id="p-name" class="field" formControlName="name" /></div>
+        <div><label class="label" for="p-code">Code *</label><input id="p-code" class="field" formControlName="code" placeholder="pro" /></div>
+        <div><label class="label" for="p-price">Price (₹)</label><input id="p-price" type="number" min="0" class="field" formControlName="price" /></div>
+        <div>
+          <label class="label" for="p-cycle">Billing cycle</label>
+          <select id="p-cycle" class="field" formControlName="cycle"><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select>
+        </div>
+        <div><label class="label" for="p-trial">Free trial (days, 0 = none)</label><input id="p-trial" type="number" min="0" class="field" formControlName="trialDays" /></div>
+        <div><label class="label" for="p-sort">Sort order</label><input id="p-sort" type="number" class="field" formControlName="sortOrder" /></div>
+
+        <div>
+          <label class="label" for="p-outlets">Max outlets</label>
+          <input id="p-outlets" type="number" min="1" class="field" formControlName="maxOutlets" [attr.disabled]="form.controls.unlimitedOutlets.value ? true : null" />
+          <label class="mt-1.5 flex items-center gap-2 text-xs"><input type="checkbox" formControlName="unlimitedOutlets" class="accent-(--brand)" /> Unlimited</label>
+        </div>
+        <div>
+          <label class="label" for="p-users">Max users</label>
+          <input id="p-users" type="number" min="1" class="field" formControlName="maxUsers" [attr.disabled]="form.controls.unlimitedUsers.value ? true : null" />
+          <label class="mt-1.5 flex items-center gap-2 text-xs"><input type="checkbox" formControlName="unlimitedUsers" class="accent-(--brand)" /> Unlimited</label>
+        </div>
+
+        <div>
+          <label class="label" for="p-products">Max products</label>
+          <input id="p-products" type="number" min="1" class="field" formControlName="maxProducts" [attr.disabled]="form.controls.unlimitedProducts.value ? true : null" />
+          <label class="mt-1.5 flex items-center gap-2 text-xs"><input type="checkbox" formControlName="unlimitedProducts" class="accent-(--brand)" /> Unlimited</label>
+        </div>
+        <div>
+          <label class="label" for="p-bills">Max bills per month</label>
+          <input id="p-bills" type="number" min="1" class="field" formControlName="maxBillsPerMonth" [attr.disabled]="form.controls.unlimitedBills.value ? true : null" />
+          <label class="mt-1.5 flex items-center gap-2 text-xs"><input type="checkbox" formControlName="unlimitedBills" class="accent-(--brand)" /> Unlimited</label>
+        </div>
+
+        <fieldset class="sm:col-span-2">
+          <legend class="label">Features</legend>
+          <div class="flex flex-wrap gap-x-4 gap-y-1.5">
+            @for (f of featureKeys; track f) {
+              <label class="flex items-center gap-2 text-xs">
+                <input type="checkbox" class="accent-(--brand)" [checked]="has(f)" (change)="toggleFeature(f, $any($event.target).checked)" /> {{ featureLabels[f] }}
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <label class="flex items-center gap-2 text-xs sm:col-span-2"><input type="checkbox" formControlName="isActive" class="accent-(--brand)" /> Active (can be assigned to new shops)</label>
+
+        <div class="mt-2 flex justify-end gap-2 sm:col-span-2">
+          <button type="button" class="btn btn-ghost" (click)="editingId.set(null)">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save plan' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,0 +1,35 @@
+/* Theme: Ocean - a second example showing how a theme is just a set of variables. */
+[data-theme='ocean'] {
+  --theme-font: 'Outfit';
+
+  --bg-from: #f3f6fb;
+  --bg-to: #d3e4fb;
+  --surface: rgb(255 255 255 / 0.65);
+  --surface-solid: #f7f9fd;
+  --line: rgb(11 37 69 / 0.1);
+  --chip: rgb(11 37 69 / 0.07);
+
+  --ink: #0b2545;
+  --ink-soft: #667b95;
+  --brand: #0b3a73;
+  --brand-ink: #ffffff;
+
+  --tone-lime: #cfe8ff;
+  --tone-teal: #a5d8f0;
+  --tone-rose: #ffd6b0;
+  --tone-lavender: #d3c9f7;
+
+  --chart-1: #bfe0ff;
+  --chart-2: #8cc8ee;
+  --chart-3: #ffc999;
+  --chart-4: #d3dbe6;
+
+  --bar-1: #9ec5f4;
+  --bar-2: #c4a8f0;
+  --bar-3: #7fd0e8;
+  --bar-4: #5aa7e6;
+  --bar-5: #f5b27f;
+  --bar-6: #a3a6ef;
+  --bar-7: #8fd9c4;
+  --bar-track: rgb(11 37 69 / 0.08);
+}

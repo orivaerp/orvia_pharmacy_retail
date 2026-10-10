@@ -1,0 +1,17 @@
+# local test logins and secrets: never commit
+test_login_cred.txt
+.env
+.env.*
+!.env.example
+
+# dependencies and build output
+node_modules/
+dist/
+.angular/
+*.log
+logs/
+
+# local editor / assistant settings
+.claude/
+.vscode/
+.idea/

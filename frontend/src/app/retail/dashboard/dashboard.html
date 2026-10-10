@@ -1,0 +1,80 @@
+<div class="flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Welcome {{ auth.user()?.name }}!</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">{{ ctx.selectedOutlet() ? ctx.selectedOutlet()!.name : 'All your outlets' }} · numbers update as bills are made</p>
+  </div>
+  <div class="flex gap-2">
+    @if (auth.hasPermission('sales.create')) { <a routerLink="/retail/pos" class="btn btn-primary">New sale</a> }
+    @if (auth.hasPermission('user.view')) { <a routerLink="/retail/staff" class="btn btn-ghost">Team members</a> }
+  </div>
+</div>
+
+@if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+
+@if (cards().length) {
+  <section class="mt-4 rounded-2xl border border-line bg-surface p-3 sm:p-4" [class.opacity-60]="loading()">
+    <h2 class="text-base font-medium sm:text-lg">Pharmacy results</h2>
+    <div class="mt-3 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+      @for (c of cards(); track c.label) {
+        <app-stat-card [label]="c.label" [value]="c.value" [change]="c.change" [period]="c.period" [icon]="c.icon" [tone]="c.tone" [spark]="c.spark" />
+      }
+    </div>
+  </section>
+}
+
+@if (data()?.sales; as s) {
+  <div class="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    <section class="rounded-2xl border border-line bg-surface p-3 sm:p-4">
+      <h2 class="text-base font-medium sm:text-lg">How customers paid</h2>
+      <p class="text-[11px] text-ink-soft">This month</p>
+      @if (split().length) {
+        <div class="mt-2"><app-donut-chart [items]="split()" [total]="splitTotal()" /></div>
+      } @else {
+        <p class="py-12 text-center text-xs text-ink-soft">No bills this month yet.</p>
+      }
+    </section>
+
+    <section class="rounded-2xl border border-line bg-surface p-3 sm:p-4">
+      <h2 class="text-base font-medium sm:text-lg">Sales, last 7 days</h2>
+      <p class="text-[11px] text-ink-soft">After refunds</p>
+      <div class="mt-2"><app-pill-bar-chart [labels]="week().labels" [values]="week().values" [max]="week().max" [step]="week().step" [formatTick]="tick" tooltipTitle="Sales" /></div>
+    </section>
+  </div>
+
+  <section class="mt-3 rounded-2xl border border-line bg-surface p-3 sm:p-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-base font-medium sm:text-lg">Recent bills</h2>
+      <a routerLink="/retail/sales" class="text-xs underline">All bills</a>
+    </div>
+    <div class="mt-2 overflow-x-auto">
+      <table class="w-full min-w-176 text-left">
+        <thead>
+          <tr class="text-[11px] text-ink-soft">
+            <th class="py-1.5 pr-3 font-normal">Bill</th>
+            <th class="py-1.5 pr-3 font-normal">Customer</th>
+            <th class="py-1.5 pr-3 font-normal">Items</th>
+            <th class="py-1.5 pr-3 font-normal">Paid by</th>
+            <th class="py-1.5 pr-3 font-normal">Total</th>
+            <th class="py-1.5 font-normal">When</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of s.recent; track b._id) {
+            <tr class="border-t border-line text-xs">
+              <td class="py-1.5 pr-3 font-medium"><a [routerLink]="['/retail/sales', b._id]" class="underline">{{ b.number }}</a></td>
+              <td class="py-1.5 pr-3">{{ b.customerName || 'Walk-in' }}</td>
+              <td class="py-1.5 pr-3">{{ b.firstItem }}{{ b.items > 1 ? ' +' + (b.items - 1) + ' more' : '' }}</td>
+              <td class="py-1.5 pr-3">@for (m of b.modes; track $index; let last = $last) { {{ modeLabel(m) }}{{ last ? '' : ' + ' }} }</td>
+              <td class="py-1.5 pr-3">{{ b.total | currency: 'INR' : 'symbol' : '1.0-0' }}</td>
+              <td class="py-1.5 whitespace-nowrap">{{ b.createdAt | date: 'dd MMM, HH:mm' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="py-10 text-center text-xs text-ink-soft">No bills yet. Your first sale will show here.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+} @else if (!loading() && !data()?.stock) {
+  <p class="mt-6 text-center text-xs text-ink-soft">Nothing to show for your role yet.</p>
+}

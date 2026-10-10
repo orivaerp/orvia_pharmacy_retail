@@ -1,0 +1,29 @@
+Rozmarra ke kaam ke liye zaroori
+Asli stock ginti (stocktake). Mahine mein ek baar shelf par jaakar ginte hain ki system ke stock se kitna kam ya zyada hai, phir ek click mein theek karte hain. Abhi sirf ek-ek batch ko haath se adjust kar sakte hain. Ye chori aur galat stock pakadne ka sabse bada tareeka hai.
+Bill cancel karna. Galat bill banne par sirf return ka raasta hai. Cancel ka saaf button chahiye, jisme wajah likhni pade aur stock wapas aa jaaye.
+Bill WhatsApp par bhejna. Grahak ko bill ka link ya PDF seedha WhatsApp par. Abhi WhatsApp sirf udhaar reminder aur supplier ke order ke liye hai, bill ke liye nahi.
+Owner ke liye "kisne kya kiya" ka record. Stock adjust, bill return, price badalna, kisne kiya. Ye record abhi sirf aapki (provider) taraf dikhta hai, shop owner ko nahi. Staff par nazar rakhne ke liye owner ko ye chahiye.
+Roz ka summary mail. Raat ko owner ko mail: aaj ki bikri, munafa, cash mein kitna, low stock, jaldi expire hone wali dawaiyan.
+Grahak aur bikri badhane wale
+Dawai refill reminder. Sugar, BP, thyroid ke grahak har mahine wahi dawai lete hain. "Aapki dawai khatam hone wali hai" ka reminder pharmacy ka sabse accha tool hai.
+Discount aur offers. Jaise "₹500 se upar 5% off" ya kisi grahak ka fixed discount. Abhi discount har line par haath se likhna padta hai.
+Loyalty points.
+Doctor aur patient ka record. Kis doctor ke naam par kitni bikri, aur kisi patient ki purani dawaiyan.
+Kharid wali taraf
+Purchase order. Supplier ko order bhejna, uski status (bheja, aa gaya) aur maal aane par seedha purchase bill banna. Abhi "order list" sirf dekhne aur WhatsApp par bhejne ke liye hai.
+Expiry hone se pehle supplier ko wapas bhejne ki list. Return ka raasta hai, par "ye in supplier ko wapas jaa sakta hai" ki suggestion nahi.
+Hisaab aur kaagzi kaam
+GST filing ke liye export (GSTR-1, GSTR-3B jaisa). Summary report hai, par filing ke format mein nahi.
+Poora data download (backup). Owner ek click mein apna saara data Excel mein le sake. Dukaan ke liye bharosa ki baat hai.
+Alag shift ya cashier ka alag cash count, aur notes-coins ki ginti.
+Phone aur setup
+Phone camera se barcode scan. Isme HTTPS chahiye. Android Chrome mein bina app ke chalta hai.
+Phone par dukaan ko "app" ki tarah install karna (home screen par icon, bina browser bar ke).
+Home delivery aur phone orders ka record.
+Meri salaah
+
+Pehle 1, 2, 4 aur 3. In chaar se dukaan mein chori, galti aur grahak ki sewa teeno par asar padta hai. Phir 6 (refill reminder) aur 10 (purchase order).
+
+Ye bhi yaad rakhna ki production se pehle automated tests aur go-live ki checklist abhi bhi baaki hain. Wo shop owner ko nahi dikhte, par bina unke app ko aage badhana risky hai.
+
+Kaunsa shuru karun? Mera vote stock ginti (stocktake) par hai.

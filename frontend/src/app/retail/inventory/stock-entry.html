@@ -1,0 +1,107 @@
+<a routerLink="/retail/inventory" class="text-xs text-ink-soft hover:text-ink">&larr; Inventory</a>
+
+@if (done(); as d) {
+  <section class="card mt-3">
+    <h1 class="text-lg font-medium">Stock added to {{ d.branch }}</h1>
+    <ul class="mt-3 divide-y divide-line text-xs">
+      @for (l of d.lines; track $index) {
+        <li class="flex justify-between py-1.5"><span><b>{{ l.name }}</b> · batch {{ l.batchNo }}</span><span>{{ l.packs }} pack{{ l.packs === 1 ? '' : 's' }} ({{ l.units }} units)</span></li>
+      }
+    </ul>
+    <div class="mt-4 flex gap-2">
+      <a routerLink="/retail/inventory" class="btn btn-primary">View inventory</a>
+      <button type="button" class="btn btn-ghost" (click)="another()">Add more stock</button>
+    </div>
+  </section>
+} @else {
+  <div class="mt-2">
+    <h1 class="text-xl font-medium tracking-tight sm:text-2xl">Add stock</h1>
+    <p class="mt-0.5 text-xs text-ink-soft">Receive stock into an outlet. Use <b>Opening stock</b> for what is already on your shelves, <b>Purchase</b> for new supplier stock.</p>
+  </div>
+
+  @if (notice()) { <p class="mt-3 rounded-xl bg-tone-lime px-3 py-2 text-xs">{{ notice() }}</p> }
+  @if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
+
+  <form (ngSubmit)="submit()" class="mt-3 space-y-3" novalidate>
+    <section class="card grid gap-3 sm:grid-cols-4">
+      <div>
+        <label class="label" for="e-outlet">Outlet *</label>
+        <select id="e-outlet" class="field" (change)="branchId = $any($event.target).value">
+          @for (o of outlets(); track o._id) { <option [value]="o._id" [selected]="o._id === branchId">{{ o.name }}</option> }
+        </select>
+      </div>
+      <div>
+        <label class="label" for="e-type">Entry type *</label>
+        <select id="e-type" class="field" (change)="type = $any($event.target).value">
+          <option value="OPENING">Opening stock</option>
+          <option value="PURCHASE">Purchase</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="e-sup">Supplier <span class="font-normal">(optional)</span></label>
+        <input id="e-sup" class="field" [value]="supplierName" (input)="supplierName = $any($event.target).value" />
+      </div>
+      <div>
+        <label class="label" for="e-ref">Invoice / reference <span class="font-normal">(optional)</span></label>
+        <input id="e-ref" class="field" [value]="reference" (input)="reference = $any($event.target).value" />
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="hidden grid-cols-[minmax(0,2.4fr)_1.3fr_1.5fr_1fr_1fr_0.9fr_auto] gap-2 px-1 pb-1 text-[11px] text-ink-soft lg:grid">
+        <span>Product</span><span>Batch no.</span><span>Expiry</span><span>MRP (per pack)</span><span>Rate (per pack)</span><span>Packs</span><span class="w-6"></span>
+      </div>
+
+      <div class="space-y-3 lg:space-y-2">
+        @for (l of lines(); track l; let i = $index) {
+          <div class="rounded-xl border border-line bg-white/50 p-2 lg:border-0 lg:bg-transparent lg:p-0">
+            <div class="grid grid-cols-2 items-start gap-2 lg:grid-cols-[minmax(0,2.4fr)_1.3fr_1.5fr_1fr_1fr_0.9fr_auto]">
+              <!-- product picker -->
+              <div class="col-span-2 lg:col-span-1">
+                <app-product-picker [value]="l.product()" (valueChange)="l.product.set($event)" (failed)="error.set($event)" />
+                @if (l.product(); as p) {
+                  <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-ink-soft">
+                    <span class="badge" [class]="scheduleClass[p.schedule]" title="Set by the Orvia catalog, cannot be changed here">{{ p.schedule }}</span>
+                    <span>GST {{ p.gstPercent }}%</span>
+                    <span>{{ p.unitsPerPack }} unit{{ p.unitsPerPack === 1 ? '' : 's' }} per pack</span>
+                    <span class="italic">(from {{ p.isCustom ? 'your product details' : 'the catalog' }})</span>
+                  </p>
+                }
+              </div>
+
+              <div><label class="label lg:hidden">Batch no.</label><input class="field uppercase" [value]="l.batchNo()" (input)="l.batchNo.set($any($event.target).value)" aria-label="Batch number" /></div>
+              <div>
+                <label class="label lg:hidden">Expiry</label>
+                <input type="month" class="field" [min]="minMonth" [value]="l.expiry()" (input)="l.expiry.set($any($event.target).value)" aria-label="Expiry month" />
+                @if (expiryHint(l); as h) { <p class="mt-0.5 text-[11px] text-amber-700">{{ h }}</p> }
+              </div>
+              <div><label class="label lg:hidden">MRP (per pack)</label><input type="number" min="0" step="0.01" class="field" [value]="l.mrp() ?? ''" (input)="l.mrp.set($any($event.target).value === '' ? null : +$any($event.target).value)" aria-label="MRP" /></div>
+              <div>
+                <label class="label lg:hidden">Rate (per pack)</label>
+                <input type="number" min="0" step="0.01" class="field" [value]="l.rate() ?? ''" (input)="l.rate.set($any($event.target).value === '' ? null : +$any($event.target).value)" aria-label="Purchase rate" />
+                @if (rateHint(l); as h) { <p class="mt-0.5 text-[11px] text-amber-700">{{ h }}</p> }
+              </div>
+              <div><label class="label lg:hidden">Packs</label><input type="number" min="1" step="1" class="field" [value]="l.packs() ?? ''" (input)="l.packs.set($any($event.target).value === '' ? null : +$any($event.target).value)" aria-label="Packs" /></div>
+              <button type="button" class="btn btn-ghost h-9 w-9 shrink-0 !p-0" [disabled]="lines().length === 1" (click)="removeLine(l)" aria-label="Remove line" title="Remove line">&times;</button>
+            </div>
+            @if (l.total() > 0) { <p class="mt-1 text-right text-[11px] text-ink-soft">Line value {{ l.total() | currency: 'INR' : 'symbol' : '1.2-2' }}</p> }
+          </div>
+        }
+      </div>
+
+      <button type="button" class="btn btn-ghost mt-3" (click)="addLine()">+ Add another product</button>
+    </section>
+
+    <section class="card flex flex-wrap items-center justify-between gap-3">
+      <p class="text-xs text-ink-soft">
+        <b class="text-ink">{{ totals().items }}</b> product{{ totals().items === 1 ? '' : 's' }} ·
+        <b class="text-ink">{{ totals().packs }}</b> pack{{ totals().packs === 1 ? '' : 's' }} ·
+        purchase value <b class="text-ink">{{ totals().value | currency: 'INR' : 'symbol' : '1.2-2' }}</b>
+      </p>
+      <div class="flex gap-2">
+        <a routerLink="/retail/inventory" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save stock' }}</button>
+      </div>
+    </section>
+  </form>
+}

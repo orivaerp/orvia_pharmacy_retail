@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* Themes: one file per theme, all defining the same CSS variables */
+@import "./themes/mint.css";
+@import "./themes/ocean.css";
+
+/* Orvia brand tokens (login page) */
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+
+  --color-orvia-50: #ecfdf7;
+  --color-orvia-100: #d1faec;
+  --color-orvia-200: #a6f3d9;
+  --color-orvia-300: #6de6c1;
+  --color-orvia-400: #34d1a4;
+  --color-orvia-500: #10b788;
+  --color-orvia-600: #06946e;
+  --color-orvia-700: #067659;
+  --color-orvia-800: #095d48;
+  --color-orvia-900: #0a4c3c;
+  --color-orvia-950: #032b22;
+
+  --color-rx-500: #0ea5e9;
+  --color-rx-600: #0284c7;
+}
+
+/* Theme-driven utilities for the app (dashboard etc.): bg-surface, text-ink, bg-tone-lime, font-theme ... */
+@theme inline {
+  --font-theme: var(--theme-font), ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface: var(--surface);
+  --color-surface-solid: var(--surface-solid);
+  --color-line: var(--line);
+  --color-chip: var(--chip);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-tone-lime: var(--tone-lime);
+  --color-tone-teal: var(--tone-teal);
+  --color-tone-rose: var(--tone-rose);
+  --color-tone-lavender: var(--tone-lavender);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-orvia-50 font-sans text-slate-800 antialiased;
+}
+
+/* Slim scrollbars that follow the active theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ink-soft) 55%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink-soft) 55%, transparent);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--brand);
+}
+
+/* Shared building blocks for app screens (forms, buttons, cards) */
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface p-3 sm:p-4;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium text-ink-soft;
+  }
+  .field {
+    @apply w-full rounded-xl border border-line bg-white/70 px-3 py-2 text-sm text-ink outline-none transition placeholder:text-ink-soft focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:opacity-60;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-brand text-brand-ink hover:opacity-90;
+  }
+  .btn-ghost {
+    @apply border border-line bg-surface text-ink hover:bg-chip;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+  .badge {
+    @apply inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium;
+  }
+}
