@@ -20,6 +20,7 @@ import activityRoutes from './modules/audit/activity.routes.js';
 import publicRoutes from './modules/sales/public.routes.js';
 import refillRoutes from './modules/customers/refill.routes.js';
 import orderRoutes from './modules/purchases/order.routes.js';
+import signupRoutes from './modules/signup/signup.routes.js';
 import userRoutes from './modules/users/user.routes.js';
 import providerRoutes from './modules/provider/provider.routes.js';
 
@@ -31,6 +32,7 @@ api.get('/health', (_req, res) => res.json({ status: 'ok', service: 'orvia-api' 
 api.use('/auth', authRoutes);
 api.use('/webhooks', webhookRoutes); // signed by the gateway, no login
 api.use('/public', publicRoutes); // a customer's bill link, no login (the token is the key)
+api.use('/public', signupRoutes); // the pricing list and self sign-up, no login
 
 // Everything below requires a valid token (and runs inside the tenant context)
 api.use(authenticate, requireActiveTenant);

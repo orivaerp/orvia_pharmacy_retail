@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/services/auth.service';
 import { Logo } from '../../shared/components/logo';
 
@@ -16,6 +17,10 @@ export class Login {
   private readonly router = inject(Router);
   /** true when the person has just reset a password and must sign in again */
   protected readonly resetDone = !!inject(ActivatedRoute).snapshot.queryParamMap.get('reset');
+
+  protected readonly marketingUrl = environment.marketingUrl;
+  protected readonly marketingLabel = environment.marketingUrl.replace(/^https?:\/\//, '');
+  protected readonly signupUrl = environment.signupUrl;
 
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);

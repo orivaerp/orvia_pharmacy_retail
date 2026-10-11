@@ -13,7 +13,7 @@
     <article class="card flex flex-col" [class.opacity-60]="!p.isActive">
       <div class="flex items-start justify-between gap-2">
         <h2 class="text-base font-medium">{{ p.name }}</h2>
-        @if (!p.isActive) { <span class="badge bg-chip">inactive</span> }
+        @if (!p.isActive) { <span class="badge bg-chip">inactive</span> } @else if (p.publicSignup !== false) { <span class="badge bg-tone-lime" title="Shown on the website's pricing and the sign-up page">on website</span> }
       </div>
       <p class="mt-2 text-2xl font-medium">{{ p.price | currency: 'INR' : 'symbol' : '1.0-0' }}<span class="text-xs font-normal text-ink-soft"> / {{ p.cycle === 'yearly' ? 'year' : 'month' }}</span></p>
       @if (p.trialDays > 0) { <p class="text-[11px] text-ink-soft">{{ p.trialDays }}-day free trial</p> }
@@ -85,6 +85,8 @@
         </fieldset>
 
         <label class="flex items-center gap-2 text-xs sm:col-span-2"><input type="checkbox" formControlName="isActive" class="accent-(--brand)" /> Active (can be assigned to new shops)</label>
+        <label class="flex items-center gap-2 text-xs sm:col-span-2"><input type="checkbox" formControlName="publicSignup" class="accent-(--brand)" /> Show on the website's pricing and the free-trial sign-up page (an inactive plan is never shown)</label>
+        <div class="sm:col-span-2"><label class="label" for="p-tag">Tagline on the website <span class="font-normal">(optional, one line)</span></label><input id="p-tag" class="field" maxlength="120" formControlName="tagline" placeholder="e.g. For one busy medical store" /></div>
 
         <div class="mt-2 flex justify-end gap-2 sm:col-span-2">
           <button type="button" class="btn btn-ghost" (click)="editingId.set(null)">Cancel</button>

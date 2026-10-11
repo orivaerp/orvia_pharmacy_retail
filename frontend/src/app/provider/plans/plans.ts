@@ -39,6 +39,8 @@ export class Plans implements OnInit {
     unlimitedUsers: [true],
     features: [[] as string[]],
     isActive: [true],
+    publicSignup: [true],
+    tagline: [''],
     sortOrder: [0],
   });
 
@@ -60,7 +62,7 @@ export class Plans implements OnInit {
   }
 
   protected openNew() {
-    this.form.reset({ cycle: 'monthly', price: 0, trialDays: 0, maxOutlets: 1, maxUsers: null, maxProducts: null, maxBillsPerMonth: null, unlimitedProducts: true, unlimitedBills: true, unlimitedOutlets: false, unlimitedUsers: true, features: [], isActive: true, sortOrder: (this.plans().at(-1)?.sortOrder ?? 0) + 1 });
+    this.form.reset({ cycle: 'monthly', price: 0, trialDays: 0, maxOutlets: 1, maxUsers: null, maxProducts: null, maxBillsPerMonth: null, unlimitedProducts: true, unlimitedBills: true, unlimitedOutlets: false, unlimitedUsers: true, features: [], isActive: true, publicSignup: true, tagline: '', sortOrder: (this.plans().at(-1)?.sortOrder ?? 0) + 1 });
     this.form.controls.code.enable();
     this.formError.set(null);
     this.editingId.set('');
@@ -83,6 +85,8 @@ export class Plans implements OnInit {
       unlimitedBills: p.maxBillsPerMonth == null,
       features: [...p.features],
       isActive: p.isActive,
+      publicSignup: p.publicSignup !== false,
+      tagline: p.tagline ?? '',
       sortOrder: p.sortOrder,
     });
     this.form.controls.code.disable(); // code is the plan's permanent identifier
@@ -118,6 +122,8 @@ export class Plans implements OnInit {
       maxBillsPerMonth: v.unlimitedBills ? null : Number(v.maxBillsPerMonth ?? 1),
       features: v.features,
       isActive: v.isActive,
+      publicSignup: v.publicSignup,
+      tagline: v.tagline.trim(),
       sortOrder: Number(v.sortOrder),
     };
     const id = this.editingId();

@@ -23,6 +23,9 @@ export interface Plan {
   maxBillsPerMonth?: number | null;
   features: string[];
   isActive: boolean;
+  /** shown on the website's pricing and the sign-up page */
+  publicSignup?: boolean;
+  tagline?: string;
   sortOrder: number;
 }
 

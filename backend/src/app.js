@@ -9,6 +9,8 @@ import routes from './routes.js';
 export function createApp() {
   const app = express();
 
+  // behind a reverse proxy (nginx, a load balancer) every request would look like it came from the proxy, so per-address limits (sign-in, sign-up) would count everybody together
+  if (env.TRUST_PROXY > 0) app.set('trust proxy', env.TRUST_PROXY);
   app.use(helmet());
   app.use(cors({ origin: env.CORS_ORIGIN.split(',').map((o) => o.trim()), credentials: true }));
   // the raw bytes are kept for webhooks: their signature is computed over the exact body

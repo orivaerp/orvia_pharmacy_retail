@@ -34,6 +34,8 @@ The backend reads `.env.development` or `.env.production` according to `NODE_ENV
 | `BILLING_GST_PERCENT`, `BILLING_GRACE_DAYS`, `BILLING_JOBS` | no | defaults 18, 7, on (`false` switches the daily billing job off) |
 | `REQUIRE_PLATFORM_2FA` | no | default: on in production, off in development |
 | `LOGIN_RATE_LIMIT` | no | sign-in attempts per IP per 15 minutes, default 20 |
+| `SIGNUP_TRIAL_DAYS`, `SIGNUP_RATE_LIMIT` | no | free-trial length for a paid plan that has no trial of its own (default 14), and sign-ups per IP per hour (default 10) |
+| `TRUST_PROXY` | production | how many reverse proxies (nginx, a load balancer) are in front of the API: 1 behind one nginx, 0 when reached directly. **Without it every visitor looks like the proxy, so the sign-in and sign-up limits count everybody together.** |
 
 Things worth knowing while developing:
 - After a permission is added, users must sign out and in once (permissions travel in the token for the browser; the server re-reads role, outlets and active status on every request).
@@ -263,6 +265,14 @@ SMTP (nodemailer), tested with a GoDaddy / Secureserver mailbox (`smtpout.secure
 - **Closing:** **Cancel** an order that nothing came for (whoever wrote a draft can cancel it; a sent one only the owner or a manager). **Close as short supplied** (owner or manager) when part arrived and the rest is not coming; the reason is kept. Audited as `purchaseorder.create|update|send|cancel|close` and shown in the owner's Activity.
 - Not built: approval before an order can be sent, prices checked against the supplier's invoice, a PDF file (only the print window), reminders for orders that are late, and receiving more than one invoice at once.
 
+### 5.25 Free-trial sign-up and public pricing
+- **`/signup`** (the sign-in page links to it: "New to Orvia? Start free trial") and **`/pricing`**, no sign-in needed. The visitor chooses a plan, gives the shop name, their name, mobile number, email and (optionally) city, and accepts the Terms and Privacy policy. A shop is created **at once** on a free trial of the chosen plan, with a Main Outlet; **a link to set the password is emailed to the owner** (valid 7 days). Everything after that is the normal shop: the trial, due, grace and lock flow of Billing applies.
+- **Everything about the plans is dynamic.** The page reads `GET /public/plans` (cached for a minute; readable from the main website too, so the website can show the same prices). It lists the **active** plans that have "Show on the website's pricing and the free-trial sign-up page" ticked (Provider > Plans, also a one-line **tagline**), in the provider's sort order. Price, billing cycle, GST percent, limits (outlets, staff, products, bills a month), features and trial days are all read from the plan. Change a plan and the page changes; untick a plan and it disappears; an inactive plan is never offered. A plan link such as `/signup?plan=pro` (from a pricing button) pre-chooses that plan.
+- **Trial length:** the plan's own "free trial (days)" if it has one, otherwise `SIGNUP_TRIAL_DAYS` (14) for a paid plan; a free plan (price 0 and no trial) has none and is simply active.
+- **Safe by design:** the sign-in link is **only emailed, never returned to the browser**, so nobody can take over a shop by typing someone else's email. One trial per **email** and per **mobile number** (409 with a plain message). If the email cannot be sent (mail not set up, wrong address) the shop is **removed again** and the visitor is told to try again (503), so no unreachable shop is left behind. A hidden field catches simple bots (they get a "success" and nothing is made). Sign-ups are limited per IP per hour (`SIGNUP_RATE_LIMIT`, 429); this needs `TRUST_PROXY` behind a proxy. The shop records that it was made by sign-up (`signupSource: self`) and when the terms were accepted; the provider's audit log shows `tenant.signup` and the shop appears in Shops as usual.
+- **Before launch:** the Terms and Privacy pages must exist at `termsUrl` and `privacyUrl` (`environments/environment.ts`, default `https://orviaerp.com/terms` and `/privacy`); untick "Show on the website" for any plan that should not be offered (the old placeholder plan "Trial" is one: a plan named Trial that is free with a trial would otherwise be listed); check the email path end to end; consider a captcha (not built).
+- Not built: choosing or changing the plan from inside the shop (the provider changes it, the owner pays on the Billing page), asking for the drug licence at sign-up (it is entered later in Settings), a captcha, an approval step, the marketing landing page itself.
+
 ---
 
 ## 6. Data (MongoDB collections)
@@ -355,7 +365,7 @@ There is **no automated test suite in the repository yet**. Each feature was che
 - Billing: prorated mid-period upgrades, automatic renewal by card or UPI mandate (every renewal is paid by hand), credit notes, GST split by state.
 - Email: bounce handling. Sending the bill itself as an email or a PDF file from Orvia's own WhatsApp number (the WhatsApp Business Platform).
 - The `apiAccess` feature; GST return export (GSTR-1 and 3B format); e-invoicing.
-- Offline billing; camera barcode scanning in the browser; payment and customer panels on the phone POS as bottom sheets.
+- Self-service plan change inside the shop; offline billing; camera barcode scanning in the browser; payment and customer panels on the phone POS as bottom sheets.
 - Loyalty points, offers and discount schemes, doctor and patient history, home delivery orders, importing old bills and payment history.
 - A shop owner's export of all their data, a data-retention and delete-shop process.
 - Automated tests in the repository.
