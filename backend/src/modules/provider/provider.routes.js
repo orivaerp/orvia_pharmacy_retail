@@ -58,6 +58,8 @@ const planBody = z.object({
   maxBillsPerMonth: z.number().int().min(1).nullable().default(null),
   features: z.array(z.enum(FEATURES)),
   isActive: z.boolean(),
+  publicSignup: z.boolean().default(true),
+  tagline: z.string().trim().max(120).optional(),
   sortOrder: z.number().int(),
 });
 

@@ -66,7 +66,8 @@ export async function getTenantDetail(id) {
   return { tenant, usage, users };
 }
 
-export async function createTenant(input) {
+/** `opts.trialDays` starts a trial of that length on the chosen plan, whatever the plan itself says (used by self sign-up). */
+export async function createTenant(input, opts = {}) {
   const plan = await activePlan(input.planId);
 
   const code = input.code ? input.code.toLowerCase() : await uniqueCode(slugify(input.name));
@@ -80,9 +81,11 @@ export async function createTenant(input) {
     gstin: input.gstin,
     phone: input.phone,
     address: input.address,
-    ...lifecycleFor(plan),
+    ...lifecycleFor(opts.trialDays > 0 ? { ...plan.toObject(), trialDays: opts.trialDays } : plan),
     // a paid plan with no trial is invoiced straight away (the job issues it, with the usual grace to pay)
-    ...(plan.price > 0 && !plan.trialDays ? { subscription: { startedAt: new Date(), periodEnd: new Date() } } : {}),
+    ...(plan.price > 0 && !plan.trialDays && !(opts.trialDays > 0) ? { subscription: { startedAt: new Date(), periodEnd: new Date() } } : {}),
+    ...(input.signupSource && { signupSource: input.signupSource }),
+    ...(input.termsAcceptedAt && { termsAcceptedAt: input.termsAcceptedAt }),
   });
 
   try {

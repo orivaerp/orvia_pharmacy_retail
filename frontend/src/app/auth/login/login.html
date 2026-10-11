@@ -110,6 +110,13 @@
           }
         </button>
       </form>
+
+      <div class="mt-8 space-y-2 border-t border-slate-100 pt-5 text-center text-sm text-slate-600">
+        @if (signupUrl) {
+          <p>New to Orvia? <a [href]="signupUrl" class="font-semibold text-orvia-700 hover:text-orvia-900">Start free trial</a></p>
+        }
+        <p class="text-xs text-slate-500">To see what Orvia pharmacy software can do, visit <a [href]="marketingUrl" class="font-medium text-orvia-700 hover:text-orvia-900" target="_blank" rel="noopener">{{ marketingLabel }}</a>.</p>
+      </div>
       } @else {
       <form (ngSubmit)="verify()" class="mt-8 space-y-5" novalidate>
         <div>

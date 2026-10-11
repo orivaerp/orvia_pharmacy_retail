@@ -13,6 +13,17 @@ export const routes: Routes = [
     title: 'Sign in | Orvia',
   },
   {
+    path: 'signup',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./auth/signup/signup').then((m) => m.Signup),
+    title: 'Start your free trial | Orvia',
+  },
+  {
+    path: 'pricing',
+    loadComponent: () => import('./auth/signup/pricing').then((m) => m.Pricing),
+    title: 'Pricing | Orvia',
+  },
+  {
     path: 'forgot-password',
     canActivate: [guestGuard],
     loadComponent: () => import('./auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),

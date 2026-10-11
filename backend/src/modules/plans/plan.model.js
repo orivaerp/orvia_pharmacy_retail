@@ -16,6 +16,9 @@ const planSchema = new mongoose.Schema(
     maxBillsPerMonth: { type: Number, default: null, min: 1 }, // null = unlimited; counted per calendar month in India time
     features: [{ type: String, enum: FEATURES }],
     isActive: { type: Boolean, default: true },
+    // shown on the website's pricing and the sign-up page (only active plans are ever offered)
+    publicSignup: { type: Boolean, default: true },
+    tagline: { type: String, trim: true, maxlength: 120 },
     sortOrder: { type: Number, default: 0 },
   },
   { timestamps: true },

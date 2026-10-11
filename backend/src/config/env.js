@@ -46,7 +46,12 @@ const schema = z.object({
   BILLING_GRACE_DAYS: z.coerce.number().int().min(0).max(60).default(7),
   BILLING_JOBS: z.enum(['true', 'false']).optional(),
   // sign-in attempts allowed per IP per 15 minutes
+  // how many reverse proxies sit in front of the API (0 when it is reached directly; 1 behind one nginx)
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
   LOGIN_RATE_LIMIT: z.coerce.number().int().min(5).default(20),
+  // self sign-up: trial length for a paid plan that has none of its own, and how many sign-ups one address may make an hour
+  SIGNUP_TRIAL_DAYS: z.coerce.number().int().min(0).max(90).default(14),
+  SIGNUP_RATE_LIMIT: z.coerce.number().int().min(1).default(10),
   REQUIRE_PLATFORM_2FA: z.enum(['true', 'false']).optional(),
   PUBLIC_API_URL: z.string().default('http://localhost:5000'),
 });
