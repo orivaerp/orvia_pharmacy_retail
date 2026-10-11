@@ -1,0 +1,118 @@
+/* The signed-out pages (sign in, free trial, forgot password, set password, pricing). Colours come from the app theme variables. */
+.au-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 16px; font-family: var(--theme-font), system-ui, sans-serif; color: var(--ink); background: linear-gradient(160deg, var(--bg-from), var(--bg-to)); background-color: var(--bg-from); box-sizing: border-box; padding-top: max(28px, env(safe-area-inset-top)); padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.au-page *, .au-page *::before, .au-page *::after { box-sizing: border-box; }
+.au-frame { width: 100%; max-width: 1040px; background: var(--frame); border-radius: 30px; padding: 10px; box-shadow: 0 30px 60px rgb(11 47 46 / 0.22); }
+.au-card { background: var(--surface-solid); border-radius: 22px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 22px; padding: 16px; min-height: 600px; }
+.au-one { grid-template-columns: 1fr; min-height: 0; }
+.au-one .au-form-side { padding: 26px clamp(18px, 4vw, 48px); }
+.au-form-side { display: flex; flex-direction: column; justify-content: center; padding: 20px clamp(18px, 4vw, 48px); min-width: 0; }
+
+/* form pieces, used by every page that sits in the shell */
+.au-form-side h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.4px; line-height: 1.15; }
+.au-sub { margin: 6px 0 24px; color: var(--ink-soft); font-size: 15px; }
+.au-lbl { display: block; margin: 0 0 6px 2px; font-size: 13.5px; font-weight: 500; }
+.au-lbl span { color: var(--ink-soft); font-weight: 400; }
+.au-field { position: relative; margin-bottom: 14px; }
+.au-field > svg.au-ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: var(--ink-soft); pointer-events: none; }
+.au-field input, .au-field select { width: 100%; height: 50px; border: 1px solid var(--line); border-radius: 14px; background: var(--field); color: var(--ink); font: inherit; font-size: 15px; padding: 0 16px 0 46px; outline: none; appearance: none; -webkit-appearance: none; transition: border-color 0.15s, box-shadow 0.15s; }
+.au-field input::placeholder { color: var(--ink-soft); }
+.au-field input:focus, .au-field select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone-teal) 55%, transparent); }
+.au-field input.au-bad { border-color: #b4424a; }
+.au-field.au-pw input { padding-right: 70px; }
+.au-show { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); height: 34px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--ink-soft); font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.au-show:hover { background: var(--chip); color: var(--ink); }
+.au-hint { margin: -8px 2px 14px; font-size: 12px; color: var(--ink-soft); }
+.au-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 2px 0 18px; }
+.au-keep { display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer; }
+.au-keep input { width: 17px; height: 17px; accent-color: var(--brand); margin: 0; flex: none; }
+.au-row a, .au-link { font-size: 13.5px; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.au-btn { width: 100%; height: 50px; border: 0; border-radius: 14px; background: var(--brand); color: var(--brand-ink); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s; box-shadow: 0 8px 18px color-mix(in srgb, var(--brand) 30%, transparent); }
+.au-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.au-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+.au-btn.au-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+.au-form-side a:focus-visible, .au-btn:focus-visible, .au-show:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.au-status { min-height: 20px; margin: 10px 2px 0; font-size: 13px; color: var(--ink-soft); }
+.au-err { margin: 0 0 14px; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; background: color-mix(in srgb, var(--tone-rose) 35%, var(--surface-solid)); color: #8a2c33; }
+.au-ok { margin: 0 0 14px; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; background: color-mix(in srgb, var(--tone-lime) 45%, var(--surface-solid)); color: var(--ink); }
+.au-signup { text-align: center; margin: 22px 0 0; font-size: 14px; color: var(--ink-soft); }
+.au-signup a { color: var(--ink); font-weight: 500; }
+.au-more { text-align: center; margin: 10px 0 0; font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
+.au-more a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.au-legal { text-align: center; margin: 18px 0 0; font-size: 12px; color: var(--ink-soft); }
+.au-two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.au-terms { display: flex; align-items: flex-start; gap: 9px; margin: 4px 0 18px; font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+.au-terms input { width: 17px; height: 17px; accent-color: var(--brand); margin: 1px 0 0; flex: none; }
+.au-terms a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.au-trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* the picture side */
+.au-visual { position: relative; border-radius: 18px; overflow: hidden; background: linear-gradient(155deg, var(--tone-teal) 0%, #c6ebe4 45%, var(--tone-lime) 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 30px 30px 22px; min-height: 560px; color: #0b2f2e; }
+.au-top { position: relative; z-index: 2; }
+.au-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 34px; }
+.au-logo-mark { width: 44px; height: 44px; border-radius: 11px; background: var(--brand); display: grid; place-items: center; flex: none; }
+.au-logo-mark svg { width: 22px; height: 22px; }
+.au-brand { display: flex; flex-direction: column; line-height: 1.1; }
+.au-brand b { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+.au-brand small { font-size: 12.5px; font-weight: 500; color: #2c5654; margin-top: 3px; }
+.au-visual h2 { margin: 0; font-size: clamp(26px, 3.2vw, 36px); line-height: 1.1; font-weight: 600; letter-spacing: -0.8px; max-width: 10.5em; position: relative; z-index: 2; }
+.au-visual p { margin: 10px 0 0; font-size: 15px; max-width: 24em; color: #2c5654; position: relative; z-index: 2; }
+.au-feat { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 10px; font-size: 14.5px; font-weight: 500; }
+.au-feat li { display: flex; align-items: center; gap: 10px; }
+.au-feat svg { width: 22px; height: 22px; padding: 4px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); flex: none; }
+.au-cart { position: absolute; right: -2%; bottom: 34px; width: 62%; max-width: 380px; height: auto; filter: drop-shadow(0 24px 24px rgb(11 47 46 / 0.22)); z-index: 1; }
+.au-copy { position: relative; z-index: 2; font-size: 12.5px; color: #2c5654; }
+
+/* tablet, a little narrower: keep both halves but tighten them */
+@media (max-width: 1024px) {
+  .au-card { gap: 16px; padding: 14px; }
+  .au-visual { padding: 26px 24px 20px; }
+  .au-cart { width: 66%; }
+}
+/* small tablet and phone: one column, the picture first and shorter */
+@media (max-width: 820px) {
+  .au-page { padding: 18px 12px; align-items: flex-start; }
+  .au-card { grid-template-columns: 1fr; min-height: 0; }
+  .au-visual { order: -1; min-height: 0; padding: 26px 24px 18px; }
+  .au-logo { margin-bottom: 24px; }
+  .au-cart { position: relative; right: auto; bottom: auto; width: 56%; max-width: 320px; margin: 14px auto 0; display: block; }
+  .au-copy { display: none; }
+  .au-form-side { padding: 22px clamp(14px, 4vw, 40px) 14px; }
+}
+/* tablet in portrait: the picture is short and wide (words on the left, cart on the right) so the form is not pushed far down */
+@media (min-width: 561px) and (max-width: 820px) {
+  .au-visual { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); grid-template-areas: "top cart"; align-items: end; gap: 6px; padding: 24px 24px 20px; }
+  .au-top { grid-area: top; }
+  .au-cart { grid-area: cart; width: 100%; max-width: 300px; margin: 0 0 -4px; align-self: end; }
+}
+@media (max-width: 560px) {
+  .au-page { padding: 10px 8px; }
+  .au-frame { border-radius: 24px; padding: 7px; }
+  .au-card { border-radius: 18px; padding: 8px; gap: 10px; }
+  .au-visual { border-radius: 14px; padding: 18px 16px 12px; }
+  .au-logo { margin-bottom: 14px; }
+  .au-logo-mark { width: 38px; height: 38px; }
+  .au-brand b { font-size: 22px; }
+  .au-visual h2 { font-size: 24px; }
+  .au-visual p { font-size: 13.5px; margin-top: 6px; }
+  .au-feat { display: none; }
+  .au-cart { width: 46%; margin-top: 8px; }
+  .au-form-side { padding: 18px 10px 10px; }
+  .au-form-side h1 { font-size: 26px; }
+  .au-two { grid-template-columns: 1fr; }
+  .au-row { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .au-page * { transition: none !important; } }
+  
+/* "What you get": a fold-out list above the sign-up form */
+.au-incl { margin: 0 0 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--field); }
+.au-incl summary { cursor: pointer; padding: 12px 14px; font-size: 13.5px; font-weight: 500; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.au-incl summary::-webkit-details-marker { display: none; }
+.au-incl summary::after { content: "+"; color: var(--ink-soft); font-size: 18px; line-height: 1; }
+.au-incl[open] summary::after { content: "–"; }
+.au-incl summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 14px; }
+.au-incl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; padding: 2px 14px 14px; font-size: 12.5px; }
+.au-incl-grid b { font-size: 12.5px; }
+.au-incl-grid ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 5px; color: var(--ink-soft); }
+.au-incl-grid li { position: relative; padding-left: 16px; line-height: 1.35; }
+.au-incl-grid li::before { content: ""; position: absolute; left: 1px; top: 4px; width: 8px; height: 5px; border-left: 2px solid var(--brand); border-bottom: 2px solid var(--brand); transform: rotate(-45deg); }
+@media (max-width: 560px) { .au-incl-grid { grid-template-columns: 1fr; } }

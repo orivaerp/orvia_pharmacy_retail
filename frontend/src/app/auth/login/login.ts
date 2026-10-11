@@ -4,11 +4,11 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/services/auth.service';
-import { Logo } from '../../shared/components/logo';
+import { AuthShell } from '../auth-shell';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, FormsModule, RouterLink, Logo],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, AuthShell],
   templateUrl: './login.html',
 })
 export class Login {

@@ -36,4 +36,8 @@
   --bar-6: #a9a9ee;
   --bar-7: #f1c27d;
   --bar-track: rgb(11 47 46 / 0.08);
+
+  /* sign-in pages: the input background and the dark frame around the card */
+  --field: #ffffff;
+  --frame: #0b2f2e;
 }

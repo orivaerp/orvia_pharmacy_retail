@@ -2,53 +2,45 @@ import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { Logo } from '../../shared/components/logo';
 import { apiError } from '../../shared/utils/api';
+import { AuthShell } from '../auth-shell';
 
-/** Landing page for the "set your password" link a provider sends to a new shop owner. */
+/** Landing page for the "set your password" link (a new shop owner, or a member of staff, or a password reset). */
 @Component({
   selector: 'app-accept-invite',
-  imports: [ReactiveFormsModule, Logo],
+  imports: [ReactiveFormsModule, AuthShell],
   template: `
-    <main class="grid min-h-screen place-items-center bg-white px-6 py-12">
-      <div class="w-full max-w-sm">
-        <app-logo />
-        @if (info(); as i) {
-          <h1 class="mt-8 font-display text-3xl font-bold text-orvia-950">Set your password</h1>
-          <p class="mt-1.5 text-sm text-slate-500">
-            Welcome, {{ i.name }}.{{ i.shopName ? ' You are setting up ' + i.shopName + '.' : '' }} Your login email is <strong>{{ i.email }}</strong>.
-          </p>
+    <app-auth-shell>
+      @if (info(); as i) {
+        <h1>Set your password</h1>
+        <p class="au-sub">Welcome, {{ i.name }}.{{ i.shopName ? ' You are setting up ' + i.shopName + '.' : '' }} Your login email is <b>{{ i.email }}</b>.</p>
 
-          @if (error()) {
-            <div role="alert" class="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error() }}</div>
-          }
+        @if (error()) { <p role="alert" class="au-err">{{ error() }}</p> }
 
-          <form [formGroup]="form" (ngSubmit)="submit()" class="mt-6 space-y-4" novalidate>
-            <div>
-              <label for="pw" class="mb-1.5 block text-sm font-medium text-slate-700">New password</label>
-              <input id="pw" type="password" formControlName="password" autocomplete="new-password"
-                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-orvia-500 focus:bg-white focus:ring-4 focus:ring-orvia-100" />
-              <p class="mt-1 text-xs text-slate-400">At least 8 characters.</p>
-            </div>
-            <div>
-              <label for="pw2" class="mb-1.5 block text-sm font-medium text-slate-700">Confirm password</label>
-              <input id="pw2" type="password" formControlName="confirm" autocomplete="new-password"
-                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-orvia-500 focus:bg-white focus:ring-4 focus:ring-orvia-100" />
-            </div>
-            <button type="submit" [disabled]="saving()"
-              class="w-full rounded-xl bg-orvia-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orvia-600/25 transition hover:bg-orvia-700 disabled:opacity-70">
-              {{ saving() ? 'Saving…' : 'Set password and sign in' }}
-            </button>
-          </form>
-        } @else if (invalid()) {
-          <h1 class="mt-8 font-display text-3xl font-bold text-orvia-950">Link not valid</h1>
-          <p class="mt-2 text-sm text-slate-500">{{ invalid() }}</p>
-          <a href="/login" class="mt-6 inline-block text-sm font-medium text-orvia-700 hover:text-orvia-900">Go to sign in</a>
-        } @else {
-          <p class="mt-8 text-sm text-slate-500">Checking your link…</p>
-        }
-      </div>
-    </main>
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <label class="au-lbl" for="pw">New password</label>
+          <div class="au-field au-pw">
+            <svg class="au-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+            <input id="pw" [type]="show() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" placeholder="At least 8 characters" />
+            <button type="button" class="au-show" (click)="show.set(!show())" [attr.aria-pressed]="show()" [attr.aria-label]="show() ? 'Hide password' : 'Show password'">{{ show() ? 'Hide' : 'Show' }}</button>
+          </div>
+          <label class="au-lbl" for="pw2">Confirm password</label>
+          <div class="au-field">
+            <svg class="au-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+            <input id="pw2" [type]="show() ? 'text' : 'password'" formControlName="confirm" autocomplete="new-password" placeholder="Type it again" />
+          </div>
+          <button type="submit" class="au-btn" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Set password and sign in' }}</button>
+        </form>
+      } @else if (invalid()) {
+        <h1>Link not valid</h1>
+        <p class="au-sub">{{ invalid() }}</p>
+        <a href="/login" class="au-btn" style="display:grid;place-items:center;text-decoration:none">Go to sign in</a>
+      } @else {
+        <h1>One moment</h1>
+        <p class="au-sub">Checking your link…</p>
+      }
+      <p class="au-legal">Licensed pharmacy software · Your data is encrypted and audited.</p>
+    </app-auth-shell>
   `,
 })
 export class AcceptInvite {
@@ -63,6 +55,7 @@ export class AcceptInvite {
   protected readonly invalid = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly saving = signal(false);
+  protected readonly show = signal(false);
 
   protected readonly form = this.fb.nonNullable.group({
     password: ['', [Validators.required, Validators.minLength(8)]],

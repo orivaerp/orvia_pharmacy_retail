@@ -1,141 +1,60 @@
-<main class="grid min-h-screen lg:grid-cols-2">
-  <!-- Brand panel -->
-  <section class="relative hidden overflow-hidden bg-linear-to-br from-orvia-700 via-orvia-800 to-orvia-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-    <!-- decorative pills & crosses -->
-    <svg class="pointer-events-none absolute inset-0 h-full w-full opacity-[0.07]" aria-hidden="true">
-      <defs>
-        <pattern id="crosses" width="64" height="64" patternUnits="userSpaceOnUse">
-          <path d="M28 20h8v8h8v8h-8v8h-8v-8h-8v-8h8z" fill="#fff" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#crosses)" />
-    </svg>
-    <div class="pointer-events-none absolute -right-24 -bottom-24 h-96 w-96 rounded-full bg-orvia-400/20 blur-3xl"></div>
-    <div class="pointer-events-none absolute top-1/3 -left-16 h-72 w-72 rounded-full bg-rx-500/20 blur-3xl"></div>
+<app-auth-shell>
+  <h1>{{ challenge() ? 'Two-step verification' : 'Welcome back' }}</h1>
+  <p class="au-sub">{{ challenge() ? 'Enter the code to finish signing in.' : 'Sign in to your pharmacy workspace.' }}</p>
 
-    <div class="relative"><app-logo mark="#ffffff22" text="text-white" /></div>
+  @if (resetDone) {
+    <p role="status" class="au-ok">Your password was changed. Sign in with the new password and your two-step code.</p>
+  }
+  @if (error()) {
+    <p role="alert" class="au-err">{{ error() }}</p>
+  }
 
-    <div class="relative max-w-md">
-      <h1 class="font-display text-4xl leading-tight font-bold">
-        Every batch, every expiry,<br />
-        <span class="text-orvia-300">under control.</span>
-      </h1>
-      <p class="mt-4 text-orvia-100/80">
-        Billing, inventory and compliance for modern pharmacies, built to keep your shelves
-        stocked and your counter fast.
-      </p>
-
-      <ul class="mt-8 space-y-3 text-sm">
-        @for (f of ['Batch & expiry tracking (FEFO)', 'Fast barcode POS billing', 'GST & Schedule H1 compliance']; track f) {
-          <li class="flex items-center gap-3">
-            <span class="grid h-6 w-6 place-items-center rounded-full bg-white/15">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.8 3.8 6.8-6.8a1 1 0 0 1 1.4 0z" clip-rule="evenodd" /></svg>
-            </span>
-            {{ f }}
-          </li>
-        }
-      </ul>
-    </div>
-
-    <p class="relative text-xs text-orvia-100/60">© {{ 2026 }} Orvia. All rights reserved.</p>
-  </section>
-
-  <!-- Form panel -->
-  <section class="flex items-center justify-center bg-white px-6 py-12 sm:px-12">
-    <div class="w-full max-w-sm">
-      <div class="mb-10 lg:hidden"><app-logo /></div>
-
-      <h2 class="font-display text-3xl font-bold text-orvia-950">{{ challenge() ? 'Two-step verification' : 'Welcome back' }}</h2>
-      <p class="mt-1.5 text-sm text-slate-500">{{ challenge() ? 'Enter the code to finish signing in.' : 'Sign in to your pharmacy workspace.' }}</p>
-
-      @if (resetDone) {
-        <div role="status" class="mt-6 rounded-xl border border-orvia-200 bg-orvia-50 px-4 py-3 text-sm text-orvia-900">Your password was changed. Sign in with the new password and your two-step code.</div>
-      }
-
-      @if (error()) {
-        <div role="alert" class="mt-6 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm1-11a1 1 0 1 0-2 0v4a1 1 0 1 0 2 0V7zm-1 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" clip-rule="evenodd" /></svg>
-          {{ error() }}
-        </div>
-      }
-
-      @if (!challenge()) {
-      <form [formGroup]="form" (ngSubmit)="submit()" class="mt-8 space-y-5" novalidate>
-        <div>
-          <label for="shopCode" class="mb-1.5 block text-sm font-medium text-slate-700">Shop code <span class="font-normal text-slate-400">(only if asked)</span></label>
-          <input id="shopCode" formControlName="shopCode" type="text" autocomplete="organization" placeholder="e.g. green-cross"
-            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition outline-none placeholder:text-slate-400 focus:border-orvia-500 focus:bg-white focus:ring-4 focus:ring-orvia-100" />
-        </div>
-
-        <div>
-          <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
-          <input id="email" formControlName="email" type="email" autocomplete="username" placeholder="you@pharmacy.com"
-            class="w-full rounded-xl border bg-slate-50 px-4 py-3 text-sm transition outline-none placeholder:text-slate-400 focus:bg-white focus:ring-4"
-            [class]="form.controls.email.touched && form.controls.email.invalid ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-slate-200 focus:border-orvia-500 focus:ring-orvia-100'" />
-          @if (form.controls.email.touched && form.controls.email.invalid) {
-            <p class="mt-1.5 text-xs text-red-600">Enter a valid email address.</p>
-          }
-        </div>
-
-        <div>
-          <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
-          <div class="relative">
-            <input id="password" formControlName="password" [type]="showPassword() ? 'text' : 'password'" autocomplete="current-password" placeholder="••••••••"
-              class="w-full rounded-xl border bg-slate-50 py-3 pr-16 pl-4 text-sm transition outline-none placeholder:text-slate-400 focus:bg-white focus:ring-4"
-              [class]="form.controls.password.touched && form.controls.password.invalid ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-slate-200 focus:border-orvia-500 focus:ring-orvia-100'" />
-            <button type="button" (click)="showPassword.set(!showPassword())"
-              class="absolute inset-y-0 right-0 px-4 text-xs font-semibold text-orvia-700 hover:text-orvia-900">
-              {{ showPassword() ? 'Hide' : 'Show' }}
-            </button>
-          </div>
-          @if (form.controls.password.touched && form.controls.password.invalid) {
-            <p class="mt-1.5 text-xs text-red-600">Password must be at least 6 characters.</p>
-          }
-        </div>
-
-        <div class="flex items-center justify-between text-sm">
-          <label class="flex items-center gap-2 text-slate-600">
-            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 accent-orvia-600" /> Keep me signed in
-          </label>
-          <a routerLink="/forgot-password" class="font-medium text-orvia-700 hover:text-orvia-900">Forgot password?</a>
-        </div>
-
-        <button type="submit" [disabled]="loading()"
-          class="flex w-full items-center justify-center gap-2 rounded-xl bg-orvia-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orvia-600/25 transition hover:bg-orvia-700 focus:ring-4 focus:ring-orvia-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70">
-          @if (loading()) {
-            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25" /><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" /></svg>
-            Signing in…
-          } @else {
-            Sign in
-          }
-        </button>
-      </form>
-
-      <div class="mt-8 space-y-2 border-t border-slate-100 pt-5 text-center text-sm text-slate-600">
-        @if (signupUrl) {
-          <p>New to Orvia? <a [href]="signupUrl" class="font-semibold text-orvia-700 hover:text-orvia-900">Start free trial</a></p>
-        }
-        <p class="text-xs text-slate-500">To see what Orvia pharmacy software can do, visit <a [href]="marketingUrl" class="font-medium text-orvia-700 hover:text-orvia-900" target="_blank" rel="noopener">{{ marketingLabel }}</a>.</p>
+  @if (!challenge()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="au-lbl" for="shopCode">Shop code <span>(only if asked)</span></label>
+      <div class="au-field">
+        <svg class="au-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5" /><path d="M5 9.5V20h14V9.5" /><path d="M12 12v5M9.5 14.5h5" /></svg>
+        <input id="shopCode" formControlName="shopCode" type="text" autocomplete="organization" placeholder="Shop code" />
       </div>
-      } @else {
-      <form (ngSubmit)="verify()" class="mt-8 space-y-5" novalidate>
-        <div>
-          <label for="code" class="mb-1.5 block text-sm font-medium text-slate-700">6-digit code</label>
-          <input id="code" name="code" [(ngModel)]="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="11" placeholder="123 456" autofocus
-            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-lg tracking-widest transition outline-none placeholder:text-slate-400 focus:border-orvia-500 focus:bg-white focus:ring-4 focus:ring-orvia-100" />
-          <p class="mt-1.5 text-xs text-slate-500">Open your authenticator app. Lost your phone? Type one of your recovery codes instead.</p>
-        </div>
-        <button type="submit" [disabled]="loading()"
-          class="flex w-full items-center justify-center gap-2 rounded-xl bg-orvia-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orvia-600/25 transition hover:bg-orvia-700 focus:ring-4 focus:ring-orvia-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70">
-          {{ loading() ? 'Checking…' : 'Verify and sign in' }}
-        </button>
-        <button type="button" (click)="back()" class="w-full text-center text-xs font-medium text-orvia-700 hover:text-orvia-900">Back to sign in</button>
-      </form>
-      }
 
-      <p class="mt-10 text-center text-xs text-slate-400">
-        Licensed pharmacy software · Your data is encrypted and audited.
-      </p>
-    </div>
-  </section>
-</main>
+      <label class="au-lbl" for="email">Email</label>
+      <div class="au-field">
+        <svg class="au-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="3" /><path d="m4.5 8 7.5 5.5L19.5 8" /></svg>
+        <input id="email" formControlName="email" type="email" autocomplete="username" placeholder="you@yourpharmacy.com" [class.au-bad]="form.controls.email.touched && form.controls.email.invalid" />
+      </div>
+      @if (form.controls.email.touched && form.controls.email.invalid) { <p class="au-hint">Enter a valid email address.</p> }
+
+      <label class="au-lbl" for="password">Password</label>
+      <div class="au-field au-pw">
+        <svg class="au-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+        <input id="password" formControlName="password" [type]="showPassword() ? 'text' : 'password'" autocomplete="current-password" placeholder="Password" [class.au-bad]="form.controls.password.touched && form.controls.password.invalid" />
+        <button type="button" class="au-show" (click)="showPassword.set(!showPassword())" [attr.aria-pressed]="showPassword()" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">{{ showPassword() ? 'Hide' : 'Show' }}</button>
+      </div>
+      @if (form.controls.password.touched && form.controls.password.invalid) { <p class="au-hint">Password must be at least 6 characters.</p> }
+
+      <div class="au-row">
+        <label class="au-keep"><input type="checkbox" /><span>Keep me signed in</span></label>
+        <a routerLink="/forgot-password">Forgot password?</a>
+      </div>
+      <button class="au-btn" type="submit" [disabled]="loading()">{{ loading() ? 'Signing in…' : 'Sign in' }}</button>
+    </form>
+
+    <p class="au-signup">
+      @if (signupUrl) { New to Orvia? <a [href]="signupUrl">Start free trial</a> }
+    </p>
+    <p class="au-more">To see what Orvia pharmacy software can do, visit <a [href]="marketingUrl" target="_blank" rel="noopener">{{ marketingLabel }}</a>.</p>
+  } @else {
+    <form (ngSubmit)="verify()" novalidate>
+      <label class="au-lbl" for="code">6-digit code</label>
+      <div class="au-field">
+        <svg class="au-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+        <input id="code" name="code" [(ngModel)]="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="11" placeholder="123 456" autofocus />
+      </div>
+      <p class="au-hint">Open your authenticator app. Lost your phone? Type one of your recovery codes instead.</p>
+      <button class="au-btn" type="submit" [disabled]="loading()">{{ loading() ? 'Checking…' : 'Verify and sign in' }}</button>
+      <p class="au-signup"><a href="#" (click)="$event.preventDefault(); back()">Back to sign in</a></p>
+    </form>
+  }
+
+  <p class="au-legal">Licensed pharmacy software · Your data is encrypted and audited.</p>
+</app-auth-shell>

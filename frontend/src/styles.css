@@ -4,6 +4,9 @@
 @import "./themes/mint.css";
 @import "./themes/ocean.css";
 
+/* signed-out pages (sign in, free trial ...) */
+@import "./app/auth/auth.css";
+
 /* Orvia brand tokens (login page) */
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
