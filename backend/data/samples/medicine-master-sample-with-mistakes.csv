@@ -1,0 +1,12 @@
+﻿name,brand,composition,strength,form,unitsPerPack,manufacturer,hsn,gstPercent,schedule,category,barcodes,referenceMrp,externalCode,status
+Dolo 650 Tablet,Dolo 650,Paracetamol,650mg,tablet,15,Micro Labs Ltd,3004,5,OTC,Analgesic,8901000000002,30.91,ML-DOLO650,verified
+Crocin Advance 500 Tablet,Crocin Advance,Paracetamol,500mg,tablet,15,GlaxoSmithKline Pharmaceuticals Ltd,3004,5,OTC,Analgesic,8901000079190,20.4,GSK-CRADV,verified
+Calpol 120mg/5ml Suspension,Calpol,Paracetamol,120mg/5ml,suspension,1,GlaxoSmithKline Pharmaceuticals Ltd,3004,5,OTC,Analgesic,8901000158383,38.5,GSK-CALPOL,verified
+Combiflam Tablet,Combiflam,Ibuprofen;Paracetamol,400mg + 325mg,tablet,20,Sanofi India Ltd,3004,5,OTC,Analgesic,8901000237576,42,SAN-COMBI,verified
+Dolo 650 Tablet,Dolo 650,Paracetamol,650mg,tablet,15,Micro Labs Ltd,3004,5,OTC,Analgesic,8901000000002,30.91,ML-DOLO650,verified
+Voveran SR 100 Tablet (wrong GST),Voveran SR,Diclofenac Sodium,100mg,tablet,10,Novartis India Ltd,3004,7,H,Analgesic,8901075230502,71.5,NOV-VOVSR,verified
+Zerodol-P Tablet (wrong form),Zerodol-P,Aceclofenac;Paracetamol,100mg + 325mg,pill,10,Ipca Laboratories Ltd,3004,5,H,Analgesic,8901075309697,66,IPC-ZERP,verified
+Azithral 500 Tablet (no manufacturer),Azithral,Azithromycin,500mg,tablet,5,,3004,5,H,Antibiotic,8901075388883,119,ALE-AZI500,verified
+Augmentin 625 Duo (no salt),Augmentin Duo,,500mg + 125mg,tablet,10,GlaxoSmithKline Pharmaceuticals Ltd,3004,5,H,Antibiotic,8901075468073,201,GSK-AUG625,verified
+Mox 500 (same barcode as row 3),Mox,Amoxicillin,500mg,capsule,10,Kopran Ltd,3004,5,H,Antibiotic,8901000079190,72,KOP-MOX5,verified
+Taxim-O 200 (bad schedule),Taxim-O,Cefixime,200mg,tablet,10,Alkem Laboratories Ltd,3004,5,Z,Antibiotic,8901075547266,108,ALK-TAXO2,verified

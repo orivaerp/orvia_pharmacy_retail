@@ -1,0 +1,46 @@
+﻿name,brand,composition,strength,form,unitsPerPack,manufacturer,hsn,gstPercent,schedule,category,barcodes,referenceMrp,externalCode,status
+Dolo 650 Tablet,Dolo 650,Paracetamol,650mg,tablet,15,Micro Labs Ltd,3004,5,OTC,Analgesic,8901000000002,30.91,ML-DOLO650,verified
+Crocin Advance 500 Tablet,Crocin Advance,Paracetamol,500mg,tablet,15,GlaxoSmithKline Pharmaceuticals Ltd,3004,5,OTC,Analgesic,8901000079190,20.4,GSK-CRADV,verified
+Calpol 120mg/5ml Suspension,Calpol,Paracetamol,120mg/5ml,suspension,1,GlaxoSmithKline Pharmaceuticals Ltd,3004,5,OTC,Analgesic,8901000158383,38.5,GSK-CALPOL,verified
+Combiflam Tablet,Combiflam,Ibuprofen;Paracetamol,400mg + 325mg,tablet,20,Sanofi India Ltd,3004,5,OTC,Analgesic,8901000237576,42,SAN-COMBI,verified
+Brufen 400 Tablet,Brufen,Ibuprofen,400mg,tablet,15,Abbott India Ltd,3004,5,H,Analgesic,8901000316769;8901039911768,24.8,ABB-BRUF4,verified
+Voveran SR 100 Tablet,Voveran SR,Diclofenac Sodium,100mg,tablet,10,Novartis India Ltd,3004,5,H,Analgesic,8901000395955,71.5,NOV-VOVSR,verified
+Zerodol-P Tablet,Zerodol-P,Aceclofenac;Paracetamol,100mg + 325mg,tablet,10,Ipca Laboratories Ltd,3004,5,H,Analgesic,8901000475145,66,IPC-ZERP,verified
+Azithral 500 Tablet,Azithral,Azithromycin,500mg,tablet,5,Alembic Pharmaceuticals Ltd,3004,5,H,Antibiotic,8901000554338,119,ALE-AZI500,verified
+Augmentin 625 Duo Tablet,Augmentin Duo,Amoxicillin;Clavulanic Acid,500mg + 125mg,tablet,10,GlaxoSmithKline Pharmaceuticals Ltd,3004,5,H,Antibiotic,8901000633521,201,GSK-AUG625,verified
+Mox 500 Capsule,Mox,Amoxicillin,500mg,capsule,10,Kopran Ltd,3004,5,H,Antibiotic,8901000712714,72,KOP-MOX5,verified
+Taxim-O 200 Tablet,Taxim-O,Cefixime,200mg,tablet,10,Alkem Laboratories Ltd,3004,5,H,Antibiotic,8901000791900,108,ALK-TAXO2,verified
+Pan 40 Tablet,Pan,Pantoprazole,40mg,tablet,15,Alkem Laboratories Ltd,3004,5,H,Gastro,8901000871091,163,ALK-PAN40,verified
+Omez 20 Capsule,Omez,Omeprazole,20mg,capsule,10,Dr Reddys Laboratories Ltd,3004,5,H,Gastro,8901000950284,56,DRL-OMEZ2,verified
+Digene Gel Mint,Digene,Magaldrate;Simethicone,400mg + 20mg per 5ml,suspension,1,Abbott India Ltd,3004,5,OTC,Gastro,8901001029477;8901040624473,126,ABB-DIGEL,verified
+ORS Electral Powder,Electral,Oral Rehydration Salts,21.8g,sachet,1,FDC Ltd,3004,5,OTC,Electrolyte,8901001108660,22,FDC-ELEC,verified
+Cetzine Tablet,Cetzine,Cetirizine,10mg,tablet,10,GlaxoSmithKline Pharmaceuticals Ltd,3004,5,OTC,Allergy,8901001187856,29,GSK-CETZ,verified
+Montair LC Tablet,Montair LC,Montelukast;Levocetirizine,10mg + 5mg,tablet,10,Cipla Ltd,3004,5,H,Allergy,8901001267046,215,CIP-MONLC,verified
+Benadryl Cough Formula Syrup,Benadryl,Diphenhydramine;Ammonium Chloride;Sodium Citrate,14.08mg + 138mg + 57.03mg per 5ml,syrup,1,Johnson & Johnson Ltd,3004,5,OTC,Cough and cold,8901001346239,118,JNJ-BENAD,verified
+Ascoril LS Syrup,Ascoril LS,Levosalbutamol;Ambroxol;Guaifenesin,1mg + 30mg + 50mg per 5ml,syrup,1,Glenmark Pharmaceuticals Ltd,3004,5,H,Cough and cold,8901001425422,126,GLE-ASCLS,verified
+Glycomet 500 SR Tablet,Glycomet,Metformin,500mg,tablet,20,USV Pvt Ltd,3004,5,H,Diabetes,8901001504615,47.5,USV-GLY5S,verified
+Januvia 100 Tablet,Januvia,Sitagliptin,100mg,tablet,7,MSD Pharmaceuticals Pvt Ltd,3004,5,H,Diabetes,8901001583801,398,MSD-JAN100,verified
+Amlodac 5 Tablet,Amlodac,Amlodipine,5mg,tablet,15,Zydus Healthcare Ltd,3004,5,H,Cardiac,8901001662995,38,ZYD-AML5,verified
+Telma 40 Tablet,Telma,Telmisartan,40mg,tablet,15,Glenmark Pharmaceuticals Ltd,3004,5,H,Cardiac,8901001742185;8901041337181,176,GLE-TEL40,verified
+Atorva 10 Tablet,Atorva,Atorvastatin,10mg,tablet,15,Zydus Healthcare Ltd,3004,5,H,Cardiac,8901001821378,110,ZYD-ATO10,verified
+Ecosprin 75 Tablet,Ecosprin,Aspirin,75mg,tablet,14,USV Pvt Ltd,3004,5,H,Cardiac,8901001900561,6.4,USV-ECO75,verified
+Thyronorm 50 Tablet,Thyronorm,Thyroxine Sodium,50mcg,tablet,120,Abbott India Ltd,3004,5,H,Thyroid,8901001979758,218,ABB-THY50,verified
+Alprax 0.25 Tablet,Alprax,Alprazolam,0.25mg,tablet,15,Torrent Pharmaceuticals Ltd,3004,5,H1,Psychiatry,8901002058940,25,TOR-ALP25,verified
+Ultracet Tablet,Ultracet,Tramadol;Paracetamol,37.5mg + 325mg,tablet,10,Janssen / J&J,3004,5,H1,Analgesic,8901002138130,138,JNJ-ULTRA,pending
+Ventolin Inhaler,Ventolin,Salbutamol,100mcg per dose,inhaler,1,GlaxoSmithKline Pharmaceuticals Ltd,3004,5,H,Respiratory,8901002217323,188,GSK-VENT,verified
+Foracort 200 Inhaler,Foracort,Formoterol;Budesonide,6mcg + 200mcg per dose,inhaler,1,Cipla Ltd,3004,5,H,Respiratory,8901002296519,410,CIP-FOR200,verified
+Neurobion Forte Tablet,Neurobion Forte,Vitamin B1;Vitamin B6;Vitamin B12,10mg + 3mg + 15mcg,tablet,30,Procter & Gamble Health Ltd,3004,5,OTC,Vitamin,8901002375702,40,PGH-NEUF,verified
+Shelcal 500 Tablet,Shelcal,Calcium Carbonate;Vitamin D3,500mg + 250IU,tablet,15,Torrent Pharmaceuticals Ltd,3004,5,OTC,Vitamin,8901002454896;8901042049892,126,TOR-SHEL5,verified
+Becosules Capsule,Becosules,Vitamin B Complex;Vitamin C,B-complex + 150mg,capsule,20,Pfizer Ltd,3004,5,OTC,Vitamin,8901002534086,47,PFI-BECO,verified
+Betadine 5% Ointment,Betadine,Povidone Iodine,5% w/w,ointment,1,Win-Medicare Pvt Ltd,3004,5,OTC,Antiseptic,8901002613279,78,WIN-BET5,verified
+Soframycin Skin Cream,Soframycin,Framycetin,1% w/w,cream,1,Sanofi India Ltd,3004,5,H,Skin,8901002692465,55,SAN-SOFRA,verified
+Volini Gel,Volini,Diclofenac;Methyl Salicylate;Menthol,1% + 10% + 5% w/w,gel,1,Sun Pharmaceutical Industries Ltd,3004,5,OTC,Pain relief,8901002771658,133,SUN-VOLG,verified
+Refresh Tears Eye Drops,Refresh Tears,Carboxymethylcellulose,0.5% w/v,drops,1,Allergan India Pvt Ltd,3004,5,OTC,Eye care,8901002850841,148,ALL-REFT,verified
+Moxifloxacin 0.5% Eye Drops,Vigamox,Moxifloxacin,0.5% w/v,drops,1,Alcon Laboratories (India) Pvt Ltd,3004,5,H,Eye care,8901002930031,142,ALC-VIGA,verified
+Insulin Human 40IU/ml Injection,Huminsulin R,Human Insulin,40IU/ml,injection,1,Eli Lilly and Company (India) Pvt Ltd,3004,5,H,Diabetes,8901003009224,168,LIL-HUMR,verified
+Pantoprazole 40mg Injection,Pantocid IV,Pantoprazole,40mg,injection,1,Sun Pharmaceutical Industries Ltd,3004,5,H,Gastro,8901003088410,74,SUN-PANIV,verified
+Savlon Antiseptic Liquid 200ml,Savlon,Chlorhexidine;Cetrimide,1.5% + 3% w/v,other,1,ITC Ltd,3808,18,OTC,Antiseptic,8901003167603;8901042762609,98,ITC-SAVL,verified
+Dettol Hand Sanitizer 200ml,Dettol,Alcohol Based Sanitizer,70% v/v,other,1,Reckitt Benckiser India Ltd,3808,18,OTC,Hygiene,8901003246797,110,RB-DETSAN,verified
+Crepe Bandage 10cm x 4m,,Not applicable,,other,1,Romsons Scientific and Surgical Industries,3005,12,OTC,Surgical,8901003325980,62,ROM-CREP10,verified
+Digital Thermometer,,Not applicable,,other,1,Omron Healthcare India Pvt Ltd,9025,18,OTC,Devices,8901003405170,245,OMR-THERM,verified
+Surgical Face Mask 3 Ply (Pack of 50),,Not applicable,,other,50,Venus Safety and Health Pvt Ltd,6307,5,OTC,Consumable,8901003484366,150,VEN-MASK50,verified

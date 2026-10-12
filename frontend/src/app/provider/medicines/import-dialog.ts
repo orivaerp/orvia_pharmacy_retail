@@ -22,6 +22,13 @@ const BRAND_TEMPLATE =
           <button type="button" class="underline" (click)="downloadTemplate()">Download template</button> ·
           <button type="button" class="underline" (click)="downloadTemplate('brand')">Branded list template</button>
         </p>
+        <p class="mt-1 text-xs text-ink-soft">
+          Sample files to try (the check below shows what would happen first, nothing is saved):
+          <a href="samples/medicine-master-sample.csv" download class="underline">45 medicines, every column</a> ·
+          <a href="samples/medicine-master-brand-list-sample.csv" download class="underline">branded list</a> ·
+          <a href="samples/medicine-master-generic-list-sample.csv" download class="underline">generic list</a> ·
+          <a href="samples/medicine-master-sample-with-mistakes.csv" download class="underline">a file with mistakes to see the errors</a>
+        </p>
 
         @if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
 

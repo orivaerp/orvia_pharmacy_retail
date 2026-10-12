@@ -26,17 +26,14 @@ const schema = z.object({
   SETTINGS_ENCRYPTION_KEY: z.string().optional(),
   // public address of this API, shown to shops as their webhook URL
   // Orvia staff must use two-step verification (default: on in production, off in development)
-  // Email over SMTP (any provider). Without SMTP_HOST and MAIL_FROM nothing is emailed; links are still shown on screen.
-  SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.coerce.number().int().default(587),
-  SMTP_SECURE: z.enum(['true', 'false']).optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
-  MAIL_FROM: z.string().optional(), // e.g. Orvia <no-reply@yourdomain.com>
-  // the same settings under the names some hosts use: login, password and sender display name
-  EMAIL_USER: z.string().optional(),
-  EMAIL_PASS: z.string().optional(),
-  EMAIL_FROM_NAME: z.string().optional(),
+  // Email over SMTP (Amazon SES in production). Without SMTP_HOST and MAIL_FROM nothing is emailed; links are still shown on screen.
+  SMTP_HOST: z.string().optional(), // SES: email-smtp.<region>.amazonaws.com
+  SMTP_PORT: z.coerce.number().int().default(587), // 587 or 2587 = STARTTLS, 465 = SSL
+  SMTP_SECURE: z.enum(['true', 'false']).optional(), // only to override the port's usual choice
+  SMTP_USER: z.string().optional(), // SES: the SMTP user name (not an AWS access key id and not an email address)
+  SMTP_PASS: z.string().optional(), // SES: the SMTP password made for that user
+  MAIL_FROM: z.string().optional(), // a verified SES identity, e.g. Orvia <no-reply@yourdomain.com>
+  MAIL_REPLY_TO: z.string().optional(), // where replies go when a message does not name its own (e.g. support@yourdomain.com)
   // Subscription billing
   COMPANY_NAME: z.string().default('Orvia'),
   COMPANY_ADDRESS: z.string().optional(),

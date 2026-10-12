@@ -12,6 +12,7 @@ interface Summary {
   secure: boolean;
   user: string | null;
   from: string | null;
+  replyTo: string | null;
   recent: { _id: string; at: string; to: string; subject: string; template: string; status: 'sent' | 'failed' | 'skipped'; error?: string }[];
 }
 
@@ -37,6 +38,7 @@ interface Summary {
             <div class="flex justify-between"><dt class="text-ink-soft">Server</dt><dd>{{ st.host }}:{{ st.port }}{{ st.secure ? ' (SSL)' : '' }}</dd></div>
             <div class="flex justify-between"><dt class="text-ink-soft">Sign-in</dt><dd>{{ st.user || 'none' }}</dd></div>
             <div class="flex justify-between sm:col-span-2"><dt class="text-ink-soft">Sent as</dt><dd>{{ st.from }}</dd></div>
+            <div class="flex justify-between sm:col-span-2"><dt class="text-ink-soft">Replies go to</dt><dd>{{ st.replyTo || 'the sender address (set MAIL_REPLY_TO to change)' }}</dd></div>
           </dl>
           <form class="mt-3 flex flex-wrap items-end gap-2" (ngSubmit)="test()">
             <div><label class="label" for="em-to">Send a test email to</label><input id="em-to" name="to" type="email" class="field w-64" [(ngModel)]="to" placeholder="you@yourdomain.com" /></div>
@@ -44,13 +46,13 @@ interface Summary {
           </form>
         } @else {
           <p class="mt-2 text-xs text-ink-soft">Nothing is emailed yet. Invite links are still shown on screen so you can send them yourself. To switch email on, set these in the server's environment file and restart it:</p>
-          <pre class="mt-2 overflow-x-auto rounded-lg border border-line bg-white/60 p-2 text-[11px]">SMTP_HOST=smtp.yourprovider.com
+          <pre class="mt-2 overflow-x-auto rounded-lg border border-line bg-white/60 p-2 text-[11px]">SMTP_HOST=email-smtp.ap-south-1.amazonaws.com
 SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-login
-SMTP_PASS=your-password
-MAIL_FROM=Orvia &lt;no-reply&#64;yourdomain.com&gt;</pre>
-          <p class="mt-1 text-[11px] text-ink-soft">Use port 465 with SMTP_SECURE=true if your provider asks for SSL. Any SMTP provider works (Zoho, Brevo, Amazon SES, Gmail with an app password ...). Use a sender address on a domain you own and have verified with the provider, or messages land in spam.</p>
+SMTP_USER=your-ses-smtp-username
+SMTP_PASS=your-ses-smtp-password
+MAIL_FROM=Orvia &lt;no-reply&#64;yourdomain.com&gt;
+MAIL_REPLY_TO=support&#64;yourdomain.com</pre>
+          <p class="mt-1 text-[11px] text-ink-soft">Amazon SES: use the SMTP endpoint of your region and the <b>SMTP credentials</b> made in the SES console (not an AWS access key). The address in MAIL_FROM, or its whole domain, must be verified in SES; until AWS lifts the sandbox limit, only verified recipients receive mail. Port 465 (SSL) also works.</p>
         }
       </section>
 
