@@ -24,6 +24,16 @@ export const routes: Routes = [
     title: 'Pricing | Orvia',
   },
   {
+    path: 'terms',
+    loadComponent: () => import('./legal/legal-pages').then((m) => m.Terms),
+    title: 'Terms of use | Orvia',
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./legal/legal-pages').then((m) => m.Privacy),
+    title: 'Privacy policy | Orvia',
+  },
+  {
     path: 'forgot-password',
     canActivate: [guestGuard],
     loadComponent: () => import('./auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),

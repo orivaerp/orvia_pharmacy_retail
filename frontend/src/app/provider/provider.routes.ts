@@ -66,6 +66,12 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Email | Orvia',
       },
       {
+        path: 'settings',
+        canActivate: [permissionGuard('platform.users.manage')],
+        loadComponent: () => import('./settings/platform-settings').then((m) => m.PlatformSettings),
+        title: 'Settings | Orvia',
+      },
+      {
         path: 'security',
         loadComponent: () => import('../shared/pages/security').then((m) => m.Security),
         title: 'Security | Orvia',

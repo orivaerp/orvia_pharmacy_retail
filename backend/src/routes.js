@@ -8,6 +8,7 @@ import { supportAccessRouter } from './modules/support/support.routes.js';
 import { shopBillingRouter } from './modules/billing/billing.routes.js';
 import customerRoutes from './modules/customers/customer.routes.js';
 import paymentRoutes from './modules/payments/payment.routes.js';
+import { sesWebhook } from './modules/mail/ses-webhook.js';
 import webhookRoutes from './modules/payments/webhook.routes.js';
 import gstRoutes from './modules/sales/gst.routes.js';
 import reportRoutes from './modules/sales/report.routes.js';
@@ -31,6 +32,7 @@ api.get('/health', (_req, res) => res.json({ status: 'ok', service: 'orvia-api' 
 
 // Public
 api.use('/auth', authRoutes);
+api.use('/webhooks/ses', sesWebhook()); // bounces and complaints from Amazon SES, signed by Amazon
 api.use('/webhooks', webhookRoutes); // signed by the gateway, no login
 api.use('/public', publicRoutes); // a customer's bill link, no login (the token is the key)
 api.use('/public', signupRoutes); // the pricing list and self sign-up, no login

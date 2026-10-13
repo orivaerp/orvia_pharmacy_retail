@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { env } from '../../config/env.js';
 import { EmailLog } from './email-log.model.js';
+import { isSuppressed } from './suppression.js';
 
 /**
  * Sends email over SMTP, built for Amazon SES (any SMTP provider works the same way).
@@ -59,6 +60,12 @@ export async function sendMail({ to, subject, text, html, template, tenantId, fr
     await EmailLog.create({ ...base, status: 'skipped', error: 'Email is not set up on this server (SMTP_HOST and MAIL_FROM).' }).catch(() => undefined);
     if (env.NODE_ENV !== 'production') console.log(`[mail] not sent (no SMTP configured): "${subject}" to ${to}`);
     return { sent: false, status: 'skipped', error: 'Email is not set up on this server.' };
+  }
+  // an address that bounced for good or complained is never mailed again: that is what gets a mail account paused
+  if (await isSuppressed(to).catch(() => false)) {
+    const error = 'This address bounced or marked an earlier email as spam, so Orvia does not send to it. Check the address.';
+    await EmailLog.create({ ...base, status: 'suppressed', error }).catch(() => undefined);
+    return { sent: false, status: 'suppressed', error };
   }
   try {
     const s = mailSettings();

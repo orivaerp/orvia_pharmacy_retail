@@ -7,7 +7,7 @@ const schema = new mongoose.Schema(
     subject: String,
     template: String,
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
-    status: { type: String, enum: ['sent', 'failed', 'skipped'], required: true },
+    status: { type: String, enum: ['sent', 'failed', 'skipped', 'suppressed'], required: true },
     error: String,
   },
   { timestamps: { createdAt: 'at', updatedAt: false } },

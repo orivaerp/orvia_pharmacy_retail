@@ -14,6 +14,7 @@ import { medicineRouter, requestRouter } from '../medicines/medicine.routes.js';
 import { Tenant } from '../tenants/tenant.model.js';
 import { User } from '../users/user.model.js';
 import { providerBillingRouter } from '../billing/billing.routes.js';
+import { settingsRouter } from '../settings/settings.routes.js';
 import { emailRouter } from './email.routes.js';
 import { platformUsersRouter } from './platform-users.routes.js';
 import { getDashboardStats } from './stats.service.js';
@@ -149,6 +150,7 @@ router.use('/', supportRouter);
 router.use('/platform-users', platformUsersRouter);
 router.use('/billing', providerBillingRouter);
 router.use('/email', emailRouter);
+router.use('/settings', settingsRouter);
 router.use('/medicines', medicineRouter);
 router.use('/medicine-requests', requestRouter);
 

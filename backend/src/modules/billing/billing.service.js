@@ -5,6 +5,7 @@ import { sendMail } from '../mail/mailer.js';
 import { billingMail } from '../mail/templates.js';
 import * as rzp from '../payments/razorpay.js';
 import { getLimits } from '../plans/plan.service.js';
+import { settings } from '../settings/settings.service.js';
 import { Tenant } from '../tenants/tenant.model.js';
 import { User } from '../users/user.model.js';
 import { WARN_DAYS, addCycle, billingState } from './billing.state.js';
@@ -17,7 +18,10 @@ const dateText = (d) => new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolka
 const billingUrl = () => `${env.FRONTEND_URL}/retail/billing`;
 
 /** The company details printed on an invoice. */
-export const companyInfo = () => ({ name: env.COMPANY_NAME, address: env.COMPANY_ADDRESS ?? '', gstin: env.COMPANY_GSTIN ?? '', bankDetails: env.BANK_DETAILS ?? '' });
+export const companyInfo = () => {
+  const s = settings();
+  return { name: s.companyName, address: s.companyAddress, gstin: s.companyGstin, bankDetails: s.bankDetails };
+};
 
 async function ownerOf(tenant) {
   return tenant.ownerUserId ? User.findById(tenant.ownerUserId).select('name email').lean() : null;
@@ -33,7 +37,7 @@ async function emailOwner(tenant, mail, template) {
 /** Issues the invoice for the period that starts at `periodStart`. Returns null if that period already has one. */
 export async function issueInvoice(tenant, plan, { periodStart, now = new Date() }) {
   const amount = r2(plan.price);
-  const gst = r2((amount * env.BILLING_GST_PERCENT) / 100);
+  const gst = r2((amount * settings().billingGstPercent) / 100);
   let invoice;
   try {
     invoice = await Invoice.create({
@@ -46,7 +50,7 @@ export async function issueInvoice(tenant, plan, { periodStart, now = new Date()
       periodStart,
       periodEnd: addCycle(periodStart, plan.cycle),
       amount,
-      gstPercent: env.BILLING_GST_PERCENT,
+      gstPercent: settings().billingGstPercent,
       gst,
       total: r2(amount + gst),
       issuedAt: now,
@@ -102,7 +106,7 @@ export async function runBillingCycle({ now = new Date() } = {}) {
     const overdue = inv.dueDate < now;
     await emailOwner(
       tenant,
-      billingMail({ kind: overdue ? 'overdue' : 'reminder', name: owner?.name ?? 'there', shopName: tenant.name, number: inv.number, total: money(inv.total), due: dateText(inv.dueDate), url: billingUrl(), graceDays: env.BILLING_GRACE_DAYS }),
+      billingMail({ kind: overdue ? 'overdue' : 'reminder', name: owner?.name ?? 'there', shopName: tenant.name, number: inv.number, total: money(inv.total), due: dateText(inv.dueDate), url: billingUrl(), graceDays: settings().billingGraceDays }),
       overdue ? 'invoice-overdue' : 'invoice-reminder',
     );
     inv.remindersSent += 1;
@@ -189,7 +193,7 @@ export async function shopBilling(tenantId) {
   return {
     plan: plan && { name: plan.name, price: plan.price, cycle: plan.cycle, features: plan.features },
     state: billingState(tenant),
-    gstPercent: env.BILLING_GST_PERCENT,
+    gstPercent: settings().billingGstPercent,
     limits,
     invoices,
     canPayOnline: Boolean(rzp.platformCreds()),

@@ -9,6 +9,8 @@ import { environment } from '../../../environments/environment';
 const PAGES: Record<string, { description: string }> = {
   '/login': { description: 'Sign in to your Orvia pharmacy workspace: billing, stock, batches and expiry for your medical store.' },
   '/signup': { description: 'Start a free trial of Orvia pharmacy software. Choose a plan, set up your shop in minutes and start billing with GST, batch and expiry tracking.' },
+  '/terms': { description: 'The terms of use of Orvia pharmacy billing and inventory software.' },
+  '/privacy': { description: 'How Orvia handles account information and your shop data.' },
   '/pricing': { description: 'Orvia pharmacy software pricing: plans for one medical store or many outlets, with a free trial. Prices are before GST.' },
 };
 

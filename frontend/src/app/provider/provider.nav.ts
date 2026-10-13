@@ -22,7 +22,7 @@ export const PROVIDER_NAV: NavSection[] = [
       { label: 'Email', icon: 'file', path: '/provider/email', permission: 'platform.users.manage' },
       { label: 'Security', icon: 'settings', path: '/provider/security' },
       { label: 'Audit log', icon: 'file', path: '/provider/audit-log', permission: 'audit.view' },
-      { label: 'Settings', icon: 'settings' },
+      { label: 'Settings', icon: 'settings', path: '/provider/settings', permission: 'platform.users.manage' },
     ],
   },
 ];

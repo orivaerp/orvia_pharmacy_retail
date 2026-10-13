@@ -5,6 +5,6 @@ export const environment = {
   siteUrl: 'http://localhost:4200',
   marketingUrl: 'https://www.orviaerp.com/services/pharmacy-software',
   signupUrl: '/signup',
-  termsUrl: 'https://orviaerp.com/terms',
-  privacyUrl: 'https://orviaerp.com/privacy',
+  termsUrl: '/terms',
+  privacyUrl: '/privacy',
 };

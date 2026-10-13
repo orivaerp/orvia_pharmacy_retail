@@ -1,4 +1,4 @@
-import { env } from '../../config/env.js';
+import { settings } from '../settings/settings.service.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { Branch } from '../branches/branch.model.js';
 import { auditEvent } from '../audit/audit.model.js';
@@ -12,7 +12,7 @@ import { User } from '../users/user.model.js';
  * The trial a plan gives: its own number of days if the provider set one, otherwise the sign-up default (SIGNUP_TRIAL_DAYS, 14)
  * for a paid plan. A free plan has no trial: it is simply free.
  */
-export const trialDaysFor = (plan) => (plan.trialDays > 0 ? plan.trialDays : plan.price > 0 ? env.SIGNUP_TRIAL_DAYS : 0);
+export const trialDaysFor = (plan) => (plan.trialDays > 0 ? plan.trialDays : plan.price > 0 ? settings().signupTrialDays : 0);
 
 const view = (p) => ({
   code: p.code,
@@ -20,7 +20,7 @@ const view = (p) => ({
   tagline: p.tagline ?? '',
   price: p.price,
   cycle: p.cycle,
-  gstPercent: env.BILLING_GST_PERCENT, // the price is before GST
+  gstPercent: settings().billingGstPercent, // the price is before GST
   trialDays: trialDaysFor(p),
   maxOutlets: p.maxOutlets,
   maxUsers: p.maxUsers,

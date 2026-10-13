@@ -8,6 +8,6 @@ export const environment = {
   /** where "Start free trial" goes (empty hides the link) */
   signupUrl: '/signup',
   /** the pages a new owner agrees to when starting a trial (they must exist on the main website) */
-  termsUrl: 'https://orviaerp.com/terms',
-  privacyUrl: 'https://orviaerp.com/privacy',
+  termsUrl: '/terms',
+  privacyUrl: '/privacy',
 };

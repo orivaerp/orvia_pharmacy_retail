@@ -1,4 +1,4 @@
-import { env } from '../../config/env.js';
+import { settings } from '../settings/settings.service.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 export const WARN_DAYS = 7; // start warning (and issue the next invoice) this long before the period ends
@@ -25,7 +25,7 @@ export function addCycle(date, cycle) {
 export function billingState(tenant, now = new Date()) {
   if (!tenant || tenant.status === 'suspended') return { state: 'suspended' };
   const override = tenant.subscription?.graceUntil ? new Date(tenant.subscription.graceUntil) : null;
-  const graceDays = tenant.status === 'trial' ? TRIAL_GRACE_DAYS : env.BILLING_GRACE_DAYS;
+  const graceDays = tenant.status === 'trial' ? TRIAL_GRACE_DAYS : settings().billingGraceDays;
   const endsAt = tenant.status === 'trial' ? (tenant.trialEndsAt ? new Date(tenant.trialEndsAt) : null) : tenant.subscription?.periodEnd ? new Date(tenant.subscription.periodEnd) : null;
 
   if (!endsAt) return { state: 'active', endsAt: null, lockAt: null, daysLeft: null }; // a free plan, or not billed yet

@@ -33,6 +33,8 @@ const schema = z.object({
   SMTP_USER: z.string().optional(), // SES: the SMTP user name (not an AWS access key id and not an email address)
   SMTP_PASS: z.string().optional(), // SES: the SMTP password made for that user
   MAIL_FROM: z.string().optional(), // a verified SES identity, e.g. Orvia <no-reply@yourdomain.com>
+  SES_SNS_TOPIC_ARN: z.string().optional(), // only bounce/complaint notices from this SNS topic are accepted (recommended)
+  SES_WEBHOOK_TOKEN: z.string().optional(), // if set, the SNS subscription address must end with ?token=<this>
   MAIL_REPLY_TO: z.string().optional(), // where replies go when a message does not name its own (e.g. support@yourdomain.com)
   // Subscription billing
   COMPANY_NAME: z.string().default('Orvia'),

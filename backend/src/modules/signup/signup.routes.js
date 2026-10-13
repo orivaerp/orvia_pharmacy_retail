@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { env } from '../../config/env.js';
 import { validateBody } from '../../middleware/validate.js';
+import { settings } from '../settings/settings.service.js';
 import { publicPlans, signup } from './signup.service.js';
 
 /** The pricing list and self sign-up. No sign-in. */
@@ -13,6 +14,13 @@ const router = Router();
 router.get('/plans', cors({ origin: '*' }), async (_req, res) => {
   res.set('Cache-Control', 'public, max-age=60');
   res.json({ plans: await publicPlans() });
+});
+
+// who runs the service, for the Terms and Privacy pages (and a website that shows the same)
+router.get('/site', cors({ origin: '*' }), (_req, res) => {
+  const s = settings();
+  res.set('Cache-Control', 'public, max-age=60');
+  res.json({ companyName: s.companyName, address: s.companyAddress, supportEmail: s.supportEmail, supportPhone: s.supportPhone, grievanceName: s.grievanceName, grievanceEmail: s.grievanceEmail });
 });
 
 // one address may sign up only a few times an hour
