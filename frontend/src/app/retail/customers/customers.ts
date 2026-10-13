@@ -84,6 +84,9 @@ import { Customer, CustomersApi, whatsappReminder } from './customers-api.servic
             <div><label class="label" for="cu-open">Already owes (₹)</label><input id="cu-open" name="open" type="number" class="field" [(ngModel)]="f.openingBalance" /></div>
             <div><label class="label" for="cu-email">Email</label><input id="cu-email" name="email" type="email" class="field" [(ngModel)]="f.email" /></div>
             <div class="sm:col-span-2"><label class="label" for="cu-addr">Address</label><input id="cu-addr" name="addr" class="field" [(ngModel)]="f.address" /></div>
+            <div><label class="label" for="cu-city">City</label><input id="cu-city" name="city" class="field" [(ngModel)]="f.city" /></div>
+            <div><label class="label" for="cu-pin">Pincode</label><input id="cu-pin" name="pin" class="field" inputmode="numeric" maxlength="6" [(ngModel)]="f.pincode" /></div>
+            <div class="sm:col-span-2"><label class="label" for="cu-gstin">GSTIN (only for a business that gives you its GSTIN)</label><input id="cu-gstin" name="gstin" class="field uppercase" maxlength="15" [(ngModel)]="f.gstin" /><p class="mt-1 text-[11px] text-ink-soft">With a GSTIN, bills to this customer are B2B invoices that go in your GSTR-1 by name, and can have an e-invoice. The address, city and pincode are needed for that.</p></div>
           </div>
           <div class="mt-4 flex justify-end gap-2">
             <button type="button" class="btn btn-ghost" (click)="adding.set(false)">Cancel</button>
@@ -114,7 +117,7 @@ export class Customers {
   protected readonly reminding = signal(false);
   protected readonly notice = signal<string | null>(null);
   private shopName = '';
-  protected f = { name: '', phone: '', email: '', address: '', creditLimit: 0, openingBalance: 0 };
+  protected f = { name: '', phone: '', email: '', address: '', city: '', pincode: '', gstin: '', creditLimit: 0, openingBalance: 0 };
   private q = '';
   private timer?: ReturnType<typeof setTimeout>;
 
@@ -184,7 +187,7 @@ export class Customers {
   }
 
   protected openAdd() {
-    this.f = { name: '', phone: '', email: '', address: '', creditLimit: 0, openingBalance: 0 };
+    this.f = { name: '', phone: '', email: '', address: '', city: '', pincode: '', gstin: '', creditLimit: 0, openingBalance: 0 };
     this.formError.set(null);
     this.adding.set(true);
   }
@@ -194,7 +197,7 @@ export class Customers {
     this.busy.set(true);
     this.formError.set(null);
     this.api
-      .create({ name: this.f.name.trim(), phone: this.f.phone.trim() || undefined, email: this.f.email.trim() || undefined, address: this.f.address.trim() || undefined, creditLimit: Number(this.f.creditLimit) || 0, openingBalance: Number(this.f.openingBalance) || 0 })
+      .create({ name: this.f.name.trim(), phone: this.f.phone.trim() || undefined, email: this.f.email.trim() || undefined, address: this.f.address.trim() || undefined, city: this.f.city.trim() || undefined, pincode: this.f.pincode.trim() || undefined, gstin: this.f.gstin.trim().toUpperCase() || undefined, creditLimit: Number(this.f.creditLimit) || 0, openingBalance: Number(this.f.openingBalance) || 0 })
       .subscribe({
         next: () => {
           this.busy.set(false);

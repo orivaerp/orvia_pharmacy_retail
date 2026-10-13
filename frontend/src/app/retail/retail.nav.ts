@@ -36,6 +36,7 @@ export const RETAIL_NAV: NavSection[] = [
       { label: 'Expenses', icon: 'card', path: '/retail/expenses', permission: 'purchase.approve' },
       { label: 'Day close', icon: 'file', path: '/retail/cash-close', permission: 'purchase.approve' },
       { label: 'Reports', icon: 'file', path: '/retail/reports', permission: 'reports.view' },
+      { label: 'GST filing', icon: 'file', path: '/retail/gst-filing', permission: 'reports.view' },
       { label: 'Activity', icon: 'chart', path: '/retail/activity', permission: 'user.manage' },
       { label: 'Support access', icon: 'file', path: '/retail/support-access', permission: 'user.manage' },
       { label: 'Security', icon: 'settings', path: '/retail/security' },

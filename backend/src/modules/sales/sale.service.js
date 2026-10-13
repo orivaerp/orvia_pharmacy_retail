@@ -14,6 +14,7 @@ import { balanceOf } from '../customers/customer.service.js';
 import { OnlinePayment } from '../payments/payment.model.js';
 import { gatewayPayment, gatewayRemaining, sendRefund } from '../payments/refund.service.js';
 import { Tenant } from '../tenants/tenant.model.js';
+import { stateCodeOfGstin, stateCodeOfName } from '../../utils/gst.js';
 import { Sale, SaleReturn } from './sale.model.js';
 
 const r2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -81,12 +82,28 @@ export async function searchForSale({ branchId, q, limit = 20, barcodes = true }
  * Creates a bill. Every line is taken from stock in the same transaction (FEFO: earliest expiry first unless the
  * cashier picked a batch), so a bill can never exist without its stock movement.
  */
+/** Who is selling and who is buying, for GST: B2B when the customer has a GSTIN; IGST when that customer is in another state. */
+export function taxParty(branch, shopGstin, customer) {
+  const sellerGstin = branch.gstin || shopGstin || undefined;
+  const sellerState = stateCodeOfGstin(sellerGstin) ?? stateCodeOfName(branch.state);
+  const buyerGstin = customer?.gstin || undefined;
+  const buyerState = stateCodeOfGstin(buyerGstin);
+  return {
+    supplyType: buyerGstin ? 'B2B' : 'B2C',
+    sellerGstin,
+    buyerGstin,
+    placeOfSupply: buyerState ?? sellerState,
+    interState: Boolean(buyerState && sellerState && buyerState !== sellerState),
+  };
+}
+
 export async function createSale(user, input) {
   await assertWithinLimit(user.tenantId, 'bills');
   const branch = await Branch.findById(input.branchId);
   if (!branch || !branch.isActive) throw ApiError.badRequest('Choose an active outlet');
 
   const seller = await User.findById(user.id).select('name').lean();
+  const shopGstin = (await Tenant.findById(user.tenantId).select('gstin').lean())?.gstin;
   const ids = [...new Set(input.lines.map((l) => l.productId))];
   const products = await Product.find({ _id: { $in: ids } }).populate('masterId');
   const byId = new Map(products.map((p) => [String(p._id), toView(p)]));
@@ -210,6 +227,7 @@ export async function createSale(user, input) {
             customerId: customer?._id,
             customerName: customer?.name ?? input.customerName,
             customerPhone: customer?.phone ?? input.customerPhone,
+            ...taxParty(branch, shopGstin, customer),
             prescriber: needsRx ? rx : undefined,
             lines: billLines,
             totals: { gross: sum('gross'), discount: sum('discount'), taxable: sum('taxable'), gst: sum('gst'), roundOff: r2(grand - exact), grand },

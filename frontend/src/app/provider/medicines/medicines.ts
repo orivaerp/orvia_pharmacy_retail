@@ -34,11 +34,15 @@ export class Medicines implements OnInit {
   protected q = '';
   protected form = '';
   protected status = '';
+  protected manufacturer = '';
+  protected readonly makers = signal<{ name: string; count: number }[]>([]);
+  private makerTimer?: ReturnType<typeof setTimeout>;
   protected page = 1;
   protected readonly limit = 20;
   private timer?: ReturnType<typeof setTimeout>;
 
   ngOnInit() {
+    this.api.manufacturers('').subscribe((r) => this.makers.set(r));
     this.load();
   }
 
@@ -48,7 +52,7 @@ export class Medicines implements OnInit {
 
   protected load() {
     this.loading.set(true);
-    this.api.medicines({ q: this.q.trim(), form: this.form, status: this.status, page: this.page, limit: this.limit }).subscribe({
+    this.api.medicines({ q: this.q.trim(), form: this.form, status: this.status, manufacturer: this.manufacturer, page: this.page, limit: this.limit }).subscribe({
       next: (r) => {
         this.items.set(r.items);
         this.total.set(r.total);
@@ -66,6 +70,16 @@ export class Medicines implements OnInit {
     this.q = v;
     clearTimeout(this.timer);
     this.timer = setTimeout(() => this.filtersChanged(), 300);
+  }
+
+  /** suggestions follow what is typed; the list is applied once the box holds a name (picked or typed in full) */
+  protected onMaker(v: string) {
+    this.manufacturer = v.trim();
+    clearTimeout(this.makerTimer);
+    this.makerTimer = setTimeout(() => {
+      this.api.manufacturers(this.manufacturer).subscribe((r) => this.makers.set(r));
+      this.filtersChanged();
+    }, 300);
   }
 
   protected filtersChanged() {
@@ -88,7 +102,7 @@ export class Medicines implements OnInit {
   }
 
   protected get hasFilter() {
-    return !!(this.q.trim() || this.form || this.status);
+    return !!(this.q.trim() || this.form || this.status || this.manufacturer);
   }
 
   protected toggleOne(id: string, on: boolean) {
@@ -114,7 +128,7 @@ export class Medicines implements OnInit {
     if (!confirm(`Mark ${what} as ${status}? ${status === 'verified' ? 'Shops will be able to add them to their inventory.' : ''}`)) return;
     this.bulkBusy.set(true);
     this.error.set(null);
-    const body = scope === 'selected' ? { status, ids: [...this.selected()] } : { status, filter: { q: this.q.trim(), form: this.form, status: this.status } };
+    const body = scope === 'selected' ? { status, ids: [...this.selected()] } : { status, filter: { q: this.q.trim(), form: this.form, status: this.status, manufacturer: this.manufacturer } };
     this.api.bulkMedicineStatus(body).subscribe({
       next: (r) => {
         this.bulkBusy.set(false);

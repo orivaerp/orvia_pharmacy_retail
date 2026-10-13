@@ -10,6 +10,10 @@ const customerSchema = new mongoose.Schema(
     phone: { type: String, trim: true }, // 10 digits, no spaces
     email: { type: String, trim: true, lowercase: true },
     address: { type: String, trim: true },
+    // a business customer: its GSTIN makes the bill a B2B invoice (GSTR-1 and e-invoice)
+    gstin: { type: String, trim: true, uppercase: true },
+    city: { type: String, trim: true },
+    pincode: { type: String, trim: true },
     notes: { type: String, trim: true },
     // udhaar (credit): how much the customer may owe at most. 0 = no limit set.
     creditLimit: { type: Number, default: 0, min: 0 },

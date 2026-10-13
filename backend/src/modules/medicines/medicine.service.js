@@ -8,11 +8,13 @@ import { medicineSchema } from './medicine.schema.js';
 const escapeRx = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Search filter shared by the provider list and the shops' catalog search (name, brand, salt, maker, barcode). */
-export function searchFilter({ q, form, status, schedule }) {
+export function searchFilter({ q, form, status, schedule, manufacturer }) {
   const filter = {};
   if (status) filter.status = status;
   if (form) filter.form = form;
   if (schedule) filter.schedule = schedule;
+  // the maker chosen from the list, or part of its name (case does not matter)
+  if (manufacturer?.trim()) filter.manufacturer = new RegExp(escapeRx(manufacturer.trim()), 'i');
   const text = q?.trim();
   if (text) {
     // every word must match somewhere (name, brand, salt, maker), in any order; or the whole text is a barcode
@@ -24,6 +26,14 @@ export function searchFilter({ q, form, status, schedule }) {
     filter.$or = [{ $and: perWord }, { barcodes: text }];
   }
   return filter;
+}
+
+/** Makers in the catalog, for the filter's suggestions: distinct names, optionally narrowed by what was typed. */
+export async function listManufacturers(q) {
+  const text = q?.trim();
+  const match = text ? { manufacturer: new RegExp(escapeRx(text), 'i') } : {};
+  const rows = await Medicine.aggregate([{ $match: match }, { $group: { _id: '$manufacturer', count: { $sum: 1 } } }, { $sort: { _id: 1 } }, { $limit: 50 }]);
+  return rows.filter((r) => r._id).map((r) => ({ name: r._id, count: r.count }));
 }
 
 export async function listMedicines(query, { page = 1, limit = 20 } = {}) {

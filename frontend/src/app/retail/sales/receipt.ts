@@ -53,6 +53,7 @@ export function receiptHtml(sale: SaleDetail, paper: Paper = 'a4', autoPrint = t
       const ls = sale.lines.filter((l) => l.gstPercent === r);
       const taxable = ls.reduce((s, l) => s + l.taxable, 0);
       const gst = ls.reduce((s, l) => s + l.gst, 0);
+      if (sale.interState) return `<tr><td>GST ${r}%</td><td class="r">${money(taxable)}</td><td class="r" colspan="2">IGST ${money(gst)}</td></tr>`;
       return `<tr><td>GST ${r}%</td><td class="r">${money(taxable)}</td><td class="r">CGST ${money(gst / 2)}</td><td class="r">SGST ${money(gst / 2)}</td></tr>`;
     })
     .join('');
@@ -78,7 +79,7 @@ ${b?.pharmacistName ? `<p class="c">Pharmacist: ${esc(b.pharmacistName)}${b.phar
 <hr>
 ${sale.status === 'CANCELLED' ? `<p class="c"><b>*** BILL CANCELLED ***</b></p>` : ''}
 <p><b>${esc(sale.number)}</b> &middot; ${new Date(sale.createdAt).toLocaleString('en-IN')}</p>
-${sale.customerName ? `<p>Customer: ${esc(sale.customerName)}${sale.customerPhone ? ' (' + esc(sale.customerPhone) + ')' : ''}</p>` : ''}
+${sale.customerName ? `<p>Customer: ${esc(sale.customerName)}${sale.customerPhone ? ' (' + esc(sale.customerPhone) + ')' : ''}${sale.buyerGstin ? ' &middot; GSTIN ' + esc(sale.buyerGstin) : ''}</p>` : ''}
 ${rx}
 <table><tr><th>Item</th><th class="r">Qty</th><th class="r">MRP</th><th class="r">Amt</th></tr>${rows}
 ${sale.totals.discount ? `<tr><td colspan="3">Discount</td><td class="r">-${money(sale.totals.discount)}</td></tr>` : ''}

@@ -20,8 +20,12 @@ const checkId = (id) => {
 export const medicineRouter = Router();
 
 medicineRouter.get('/', requirePermission(P.TENANT_VIEW), async (req, res) => {
-  const { q, form, status, schedule } = req.query;
-  res.json(await meds.listMedicines({ q: q?.toString(), form: form?.toString(), status: status?.toString(), schedule: schedule?.toString() }, paging(req.query)));
+  const { q, form, status, schedule, manufacturer } = req.query;
+  res.json(await meds.listMedicines({ q: q?.toString(), form: form?.toString(), status: status?.toString(), schedule: schedule?.toString(), manufacturer: manufacturer?.toString() }, paging(req.query)));
+});
+
+medicineRouter.get('/manufacturers', requirePermission(P.TENANT_VIEW), async (req, res) => {
+  res.json(await meds.listManufacturers(req.query.q?.toString()));
 });
 
 medicineRouter.post('/', requirePermission(P.MEDICINE_MANAGE), validateBody(medicineSchema), async (req, res) => {
@@ -63,7 +67,7 @@ medicineRouter.post(
     z.object({
       status: z.enum(['verified', 'pending', 'inactive']),
       ids: z.array(objectId).max(1000).optional(),
-      filter: z.object({ q: z.string().optional(), form: z.string().optional(), status: z.string().optional(), schedule: z.string().optional() }).optional(),
+      filter: z.object({ q: z.string().optional(), form: z.string().optional(), status: z.string().optional(), schedule: z.string().optional(), manufacturer: z.string().optional() }).optional(),
     }),
   ),
   async (req, res) => {

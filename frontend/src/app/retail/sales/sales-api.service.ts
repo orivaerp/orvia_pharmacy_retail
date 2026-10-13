@@ -83,6 +83,10 @@ export interface SaleRow {
   payments: { mode: PayMode; amount: number }[];
   status: 'COMPLETED' | 'RETURNED' | 'CANCELLED';
   soldByName?: string;
+  /** B2B when the customer has a GSTIN; interState means the tax is IGST */
+  supplyType?: 'B2C' | 'B2B';
+  buyerGstin?: string;
+  interState?: boolean;
   cancelReason?: string;
   cancelledByName?: string;
   cancelledAt?: string;

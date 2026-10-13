@@ -8,6 +8,9 @@ export interface Customer {
   phone: string;
   email: string;
   address: string;
+  gstin: string;
+  city: string;
+  pincode: string;
   notes: string;
   creditLimit: number;
   openingBalance: number;
@@ -46,6 +49,9 @@ export interface CustomerInput {
   phone?: string;
   email?: string;
   address?: string;
+  gstin?: string;
+  city?: string;
+  pincode?: string;
   notes?: string;
   creditLimit?: number;
   openingBalance?: number;

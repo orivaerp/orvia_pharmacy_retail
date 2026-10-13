@@ -7,6 +7,7 @@ import { validateBody } from '../../middleware/validate.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { audit } from '../audit/audit.model.js';
 import { User } from '../users/user.model.js';
+import { isValidGstin } from '../../utils/gst.js';
 import * as svc from './customer.service.js';
 
 const router = Router();
@@ -27,6 +28,9 @@ const customerSchema = z.object({
   phone: text(20),
   email: z.union([z.email(), z.literal('')]).optional().transform((v) => v || undefined),
   address: text(200),
+  gstin: z.string().trim().toUpperCase().optional().or(z.literal('').transform(() => undefined)).refine((v) => !v || isValidGstin(v), 'This is not a valid GSTIN'),
+  city: text(60),
+  pincode: z.string().trim().regex(/^(\d{6})?$/, 'Pincode must be 6 digits').optional().transform((v) => v || undefined),
   notes: text(300),
   creditLimit: z.number().min(0).max(10_000_000).default(0),
   openingBalance: z.number().min(-10_000_000).max(10_000_000).default(0),

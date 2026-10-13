@@ -220,7 +220,7 @@ export class ProviderApi {
   }
 
   // ---- medicine master catalog ----
-  medicines(filters: { q?: string; form?: string; status?: string; schedule?: string; page?: number; limit?: number }) {
+  medicines(filters: { q?: string; form?: string; status?: string; schedule?: string; manufacturer?: string; page?: number; limit?: number }) {
     let params = new HttpParams();
     for (const [k, v] of Object.entries(filters)) if (v !== undefined && v !== '') params = params.set(k, String(v));
     return this.http.get<Page<Medicine>>(`${this.base}/medicines`, { params });
@@ -242,7 +242,11 @@ export class ProviderApi {
     return this.http.get<Medicine[]>(`${this.base}/medicines/${id}/substitutes`);
   }
 
-  bulkMedicineStatus(body: { status: 'verified' | 'pending' | 'inactive'; ids?: string[]; filter?: { q?: string; form?: string; status?: string } }) {
+  manufacturers(q: string) {
+    return this.http.get<{ name: string; count: number }[]>(`${this.base}/medicines/manufacturers`, { params: q ? { q } : {} });
+  }
+
+  bulkMedicineStatus(body: { status: 'verified' | 'pending' | 'inactive'; ids?: string[]; filter?: { q?: string; form?: string; status?: string; manufacturer?: string } }) {
     return this.http.post<{ matched: number; updated: number }>(`${this.base}/medicines/bulk-status`, body);
   }
 

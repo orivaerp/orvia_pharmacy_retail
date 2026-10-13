@@ -1,7 +1,9 @@
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/services/auth.service';
 import { apiError } from '../../shared/utils/api';
 import { Paper, printReceipt, savePaper, savedPaper } from './receipt';
@@ -33,6 +35,7 @@ import { PAY_MODES, PayMode, SaleDetail, SalesApi } from './sales-api.service';
           </select>
           <button type="button" class="btn btn-primary" (click)="print()">Print bill</button>
           @if (canSend()) { <button type="button" class="btn btn-ghost" (click)="whatsapp()">Send on WhatsApp</button> }
+          @if (s.supplyType === 'B2B' && s.status !== 'CANCELLED' && canGst()) { <button type="button" class="btn btn-ghost" [disabled]="busy()" (click)="einvoice(s.number)">E-invoice file</button> }
         </div>
       </div>
 
@@ -145,6 +148,7 @@ import { PAY_MODES, PayMode, SaleDetail, SalesApi } from './sales-api.service';
 })
 export class SaleDetailPage {
   private readonly api = inject(SalesApi);
+  private readonly http = inject(HttpClient);
   protected readonly auth = inject(AuthService);
 
   id = input.required<string>();
@@ -224,6 +228,33 @@ export class SaleDetailPage {
       error: (e) => {
         this.busy.set(false);
         this.error.set(apiError(e));
+      },
+    });
+  }
+
+  protected canGst() {
+    return this.auth.hasPermission('reports.view');
+  }
+
+  /** The e-invoice file (JSON for the e-invoice portal) of this business bill. */
+  protected einvoice(number: string) {
+    this.error.set(null);
+    this.http.get(`${environment.apiUrl}/gst/einvoice/sale/${this.id()}`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `einvoice_${number}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      },
+      error: async (e: HttpErrorResponse) => {
+        let message = 'The e-invoice file could not be made.';
+        try {
+          message = JSON.parse(await (e.error as Blob).text()).message ?? message;
+        } catch {
+          /* keep the general message */
+        }
+        this.error.set(message);
       },
     });
   }

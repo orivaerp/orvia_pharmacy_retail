@@ -48,6 +48,12 @@ const saleSchema = new mongoose.Schema(
       patientAge: Number,
       address: String,
     },
+    // GST filing: a bill to a customer with a GSTIN is B2B. interState = the buyer's state differs from the seller's, so the tax is IGST instead of CGST + SGST.
+    supplyType: { type: String, enum: ['B2C', 'B2B'], default: 'B2C' },
+    sellerGstin: String,
+    buyerGstin: String,
+    placeOfSupply: String, // 2-digit GST state code
+    interState: { type: Boolean, default: false },
     lines: { type: [lineSchema], required: true },
     totals: {
       gross: Number,

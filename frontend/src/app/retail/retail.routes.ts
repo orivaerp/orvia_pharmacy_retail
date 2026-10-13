@@ -107,6 +107,12 @@ export const RETAIL_ROUTES: Routes = [
         title: 'Customer | Orvia',
       },
       {
+        path: 'gst-filing',
+        canActivate: [permissionGuard('reports.view')],
+        loadComponent: () => import('./gst/gst-filing').then((m) => m.GstFiling),
+        title: 'GST filing | Orvia',
+      },
+      {
         path: 'reports',
         canActivate: [permissionGuard('reports.view')],
         loadComponent: () => import('./reports/reports').then((m) => m.Reports),

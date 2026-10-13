@@ -24,7 +24,7 @@ const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' 
       <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 class="flex items-center gap-2 text-xl font-medium tracking-tight sm:text-2xl">{{ cu.name }} @if (!cu.isActive) { <span class="badge bg-chip">inactive</span> }</h1>
-          <p class="mt-0.5 text-xs text-ink-soft">{{ cu.phone || 'No phone' }}{{ cu.email ? ' · ' + cu.email : '' }}{{ cu.address ? ' · ' + cu.address : '' }}</p>
+          <p class="mt-0.5 text-xs text-ink-soft">{{ cu.phone || 'No phone' }}{{ cu.email ? ' · ' + cu.email : '' }}{{ cu.address ? ' · ' + cu.address : '' }}{{ cu.gstin ? ' · GSTIN ' + cu.gstin : '' }}</p>
         </div>
         @if (canEdit()) {
           <div class="flex gap-2">
@@ -120,6 +120,9 @@ const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' 
             <div><label class="label" for="ce-limit">Udhaar limit (₹, 0 = none)</label><input id="ce-limit" name="limit" type="number" min="0" class="field" [(ngModel)]="e.creditLimit" /></div>
             <div><label class="label" for="ce-email">Email</label><input id="ce-email" name="email" type="email" class="field" [(ngModel)]="e.email" /></div>
             <div><label class="label" for="ce-addr">Address</label><input id="ce-addr" name="addr" class="field" [(ngModel)]="e.address" /></div>
+            <div><label class="label" for="ce-city">City</label><input id="ce-city" name="city" class="field" [(ngModel)]="e.city" /></div>
+            <div><label class="label" for="ce-pin">Pincode</label><input id="ce-pin" name="pin" class="field" inputmode="numeric" maxlength="6" [(ngModel)]="e.pincode" /></div>
+            <div class="sm:col-span-2"><label class="label" for="ce-gstin">GSTIN (a business customer)</label><input id="ce-gstin" name="gstin" class="field uppercase" maxlength="15" [(ngModel)]="e.gstin" /></div>
             <label class="flex items-center gap-2 text-xs sm:col-span-2"><input type="checkbox" name="active" [(ngModel)]="e.isActive" /> Active (inactive customers cannot be picked on a bill)</label>
           </div>
           <div class="mt-4 flex justify-end gap-2">
@@ -157,7 +160,7 @@ export class CustomerDetailPage {
   protected mode = 'CASH';
   protected date = today();
   protected reference = '';
-  protected e = { name: '', phone: '', email: '', address: '', creditLimit: 0, isActive: true };
+  protected e = { name: '', phone: '', email: '', address: '', city: '', pincode: '', gstin: '', creditLimit: 0, isActive: true };
 
   constructor() {
     effect(() => this.load(this.id()));
@@ -225,7 +228,7 @@ export class CustomerDetailPage {
   protected openEdit() {
     const cu = this.c();
     if (!cu) return;
-    this.e = { name: cu.name, phone: cu.phone, email: cu.email, address: cu.address, creditLimit: cu.creditLimit, isActive: cu.isActive };
+    this.e = { name: cu.name, phone: cu.phone, email: cu.email, address: cu.address, city: cu.city ?? '', pincode: cu.pincode ?? '', gstin: cu.gstin ?? '', creditLimit: cu.creditLimit, isActive: cu.isActive };
     this.formError.set(null);
     this.dialog.set('edit');
   }
@@ -234,7 +237,7 @@ export class CustomerDetailPage {
     if (this.e.name.trim().length < 2) return this.formError.set('Enter the name.');
     this.busy.set(true);
     this.formError.set(null);
-    this.api.update(this.id(), { name: this.e.name.trim(), phone: this.e.phone.trim(), email: this.e.email.trim(), address: this.e.address.trim(), creditLimit: Number(this.e.creditLimit) || 0, isActive: this.e.isActive }).subscribe({
+    this.api.update(this.id(), { name: this.e.name.trim(), phone: this.e.phone.trim(), email: this.e.email.trim(), address: this.e.address.trim(), city: this.e.city.trim(), pincode: this.e.pincode.trim(), gstin: this.e.gstin.trim().toUpperCase(), creditLimit: Number(this.e.creditLimit) || 0, isActive: this.e.isActive }).subscribe({
       next: () => {
         this.busy.set(false);
         this.dialog.set(null);
