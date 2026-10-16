@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export const FORMS = ['tablet', 'capsule', 'syrup', 'suspension', 'injection', 'ointment', 'cream', 'gel', 'drops', 'inhaler', 'powder', 'sachet', 'lotion', 'spray', 'other'];
+export const FORMS = ['tablet', 'capsule', 'syrup', 'dry syrup', 'suspension', 'injection', 'ointment', 'cream', 'gel', 'drops', 'inhaler', 'powder', 'sachet', 'lotion', 'spray', 'solution', 'respules', 'liniment', 'oil', 'churna', 'paste', 'patch', 'lozenge', 'suppository', 'device', 'consumable', 'test kit', 'personal care', 'nutrition', 'kit', 'other'];
 export const SCHEDULES = ['OTC', 'H', 'H1', 'X', 'NDPS'];
 export const MEDICINE_STATUSES = ['verified', 'pending', 'inactive'];
 

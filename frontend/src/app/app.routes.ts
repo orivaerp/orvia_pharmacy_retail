@@ -10,7 +10,7 @@ export const routes: Routes = [
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () => import('./auth/login/login').then((m) => m.Login),
-    title: 'Sign in | Orvia',
+    title: 'Orvia Pharmacy Login | Sign in to Your Pharmacy Account',
   },
   {
     path: 'signup',

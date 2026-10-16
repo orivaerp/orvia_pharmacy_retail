@@ -242,6 +242,13 @@ export class ProviderApi {
     return this.http.get<Medicine[]>(`${this.base}/medicines/${id}/substitutes`);
   }
 
+  /** The catalog as a CSV file (the same columns Import CSV reads), narrowed by the same filters as the list. */
+  exportMedicines(filters: { q?: string; form?: string; status?: string; schedule?: string; manufacturer?: string }) {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(filters)) if (v !== undefined && v !== '') params = params.set(k, String(v));
+    return this.http.get(`${this.base}/medicines/export`, { params, responseType: 'blob' });
+  }
+
   manufacturers(q: string) {
     return this.http.get<{ name: string; count: number }[]>(`${this.base}/medicines/manufacturers`, { params: q ? { q } : {} });
   }

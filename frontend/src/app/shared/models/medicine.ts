@@ -1,4 +1,4 @@
-export const FORMS = ['tablet', 'capsule', 'syrup', 'suspension', 'injection', 'ointment', 'cream', 'gel', 'drops', 'inhaler', 'powder', 'sachet', 'lotion', 'spray', 'other'] as const;
+export const FORMS = ['tablet', 'capsule', 'syrup', 'dry syrup', 'suspension', 'injection', 'ointment', 'cream', 'gel', 'drops', 'inhaler', 'powder', 'sachet', 'lotion', 'spray', 'solution', 'respules', 'liniment', 'oil', 'churna', 'paste', 'patch', 'lozenge', 'suppository', 'device', 'consumable', 'test kit', 'personal care', 'nutrition', 'kit', 'other'] as const;
 export const SCHEDULES = ['OTC', 'H', 'H1', 'X', 'NDPS'] as const;
 export const GST_RATES = [0, 5, 12, 18, 28] as const;
 

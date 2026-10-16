@@ -4,6 +4,7 @@
     <p class="mt-0.5 text-xs text-ink-soft">{{ total() }} medicine{{ total() === 1 ? '' : 's' }} in the common catalog that every shop picks from</p>
   </div>
   <div class="flex gap-2">
+    <button type="button" class="btn btn-ghost" [disabled]="exporting() || !total()" (click)="exportCsv()">{{ exporting() ? 'Preparing…' : hasFilter ? 'Export these ' + total() + ' (CSV)' : 'Export all (CSV)' }}</button>
     <button type="button" class="btn btn-ghost" (click)="showImport.set(true)">Import CSV</button>
     <button type="button" class="btn btn-primary" (click)="openAdd()">+ Add medicine</button>
   </div>

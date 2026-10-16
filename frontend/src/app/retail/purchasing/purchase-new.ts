@@ -87,6 +87,7 @@ class Line {
                   @if (l.product(); as p) {
                     <p class="mt-1 flex flex-wrap items-center gap-x-2 text-[11px] text-ink-soft">
                       <span class="badge" [class]="scheduleClass[p.schedule]">{{ p.schedule }}</span>
+                      <span>{{ p.form }}{{ p.strength ? ' ' + p.strength : '' }}</span>
                       <span>{{ p.unitsPerPack }} per pack</span>
                     </p>
                   }

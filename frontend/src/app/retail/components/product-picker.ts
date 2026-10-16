@@ -27,7 +27,7 @@ import { RetailApi } from '../retail-api.service';
               <p class="px-3 pt-2 pb-1 text-[10px] font-medium tracking-wider text-ink-soft uppercase">In your inventory</p>
               @for (p of mine(); track p._id) {
                 <button type="button" class="block w-full px-3 py-1.5 text-left hover:bg-chip" (mousedown)="pick(p)">
-                  <b>{{ p.name }}</b>@if (p.brand) { <span class="badge ml-1 bg-tone-lavender">{{ p.brand }}</span> }<span class="block text-[11px] text-ink-soft">{{ p.manufacturer }} · {{ p.schedule }} · GST {{ p.gstPercent }}%</span>
+                  <b>{{ p.name }}</b>@if (p.brand) { <span class="badge ml-1 bg-tone-lavender">{{ p.brand }}</span> }<span class="block text-[11px] text-ink-soft">{{ p.form }}{{ p.strength ? ' ' + p.strength : '' }} · {{ p.manufacturer }} · {{ p.schedule }} · GST {{ p.gstPercent }}%</span>
                 </button>
               }
             }
@@ -35,7 +35,7 @@ import { RetailApi } from '../retail-api.service';
               <p class="px-3 pt-2 pb-1 text-[10px] font-medium tracking-wider text-ink-soft uppercase">From Orvia catalog <span class="font-normal normal-case">(added to your inventory when you pick it)</span></p>
               @for (m of catalog(); track m._id) {
                 <button type="button" class="block w-full px-3 py-1.5 text-left hover:bg-chip" (mousedown)="pickFromCatalog(m)">
-                  <b>{{ m.name }}</b>@if (m.brand) { <span class="badge ml-1 bg-tone-lavender">{{ m.brand }}</span> }<span class="block text-[11px] text-ink-soft">{{ m.manufacturer }} · {{ m.schedule }} · GST {{ m.gstPercent }}%</span>
+                  <b>{{ m.name }}</b>@if (m.brand) { <span class="badge ml-1 bg-tone-lavender">{{ m.brand }}</span> }<span class="block text-[11px] text-ink-soft">{{ m.form }}{{ m.strength ? ' ' + m.strength : '' }} · {{ m.manufacturer }} · {{ m.schedule }} · GST {{ m.gstPercent }}%</span>
                 </button>
               }
             }

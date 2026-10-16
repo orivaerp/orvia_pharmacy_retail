@@ -6,9 +6,10 @@ import { filter } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 /** What each public page says about itself. Only these pages are offered to search engines; everything else is kept out. */
-const PAGES: Record<string, { description: string }> = {
-  '/login': { description: 'Sign in to your Orvia pharmacy workspace: billing, stock, batches and expiry for your medical store.' },
-  '/signup': { description: 'Start a free trial of Orvia pharmacy software. Choose a plan, set up your shop in minutes and start billing with GST, batch and expiry tracking.' },
+const PAGES: Record<string, { description: string; ogTitle?: string; robots?: string }> = {
+  '/login': { description: 'Log in to Orvia Pharmacy to manage billing, stock and expiry for your medical store. New here? Start your 14-day free trial.', ogTitle: 'Orvia Pharmacy Login' },
+  // the sign-up page is kept out of search so it does not compete with the website's own pharmacy software page; links on it are still followed
+  '/signup': { robots: 'noindex, follow', description: 'Start a free trial of Orvia pharmacy software. Choose a plan, set up your shop in minutes and start billing with GST, batch and expiry tracking.' },
   '/terms': { description: 'The terms of use of Orvia pharmacy billing and inventory software.' },
   '/privacy': { description: 'How Orvia handles account information and your shop data.' },
   '/pricing': { description: 'Orvia pharmacy software pricing: plans for one medical store or many outlets, with a free trial. Prices are before GST.' },
@@ -35,13 +36,13 @@ export class SeoService {
     const url = `${environment.siteUrl}${path === '/' ? '/' : path}`;
     // the title comes from the route (set by the router a moment ago); the share card repeats it
     const title = this.title.getTitle();
-    this.meta.updateTag({ name: 'robots', content: page ? 'index, follow, max-image-preview:large' : 'noindex, nofollow' });
+    this.meta.updateTag({ name: 'robots', content: page ? (page.robots ?? 'index, follow, max-image-preview:large') : 'noindex, nofollow' });
     if (page) {
       this.meta.updateTag({ name: 'description', content: page.description });
-      this.meta.updateTag({ property: 'og:title', content: title });
+      this.meta.updateTag({ property: 'og:title', content: page.ogTitle ?? title });
       this.meta.updateTag({ property: 'og:description', content: page.description });
       this.meta.updateTag({ property: 'og:url', content: url });
-      this.meta.updateTag({ name: 'twitter:title', content: title });
+      this.meta.updateTag({ name: 'twitter:title', content: page.ogTitle ?? title });
       this.meta.updateTag({ name: 'twitter:description', content: page.description });
       this.canonical(url);
     }

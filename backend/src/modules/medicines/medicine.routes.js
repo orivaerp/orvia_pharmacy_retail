@@ -24,6 +24,17 @@ medicineRouter.get('/', requirePermission(P.TENANT_VIEW), async (req, res) => {
   res.json(await meds.listMedicines({ q: q?.toString(), form: form?.toString(), status: status?.toString(), schedule: schedule?.toString(), manufacturer: manufacturer?.toString() }, paging(req.query)));
 });
 
+// Download the catalog (or what the current search and filters show) as a CSV that the import can read again.
+medicineRouter.get('/export', requirePermission(P.TENANT_VIEW), async (req, res) => {
+  const { q, form, status, schedule, manufacturer } = req.query;
+  const query = { q: q?.toString(), form: form?.toString(), status: status?.toString(), schedule: schedule?.toString(), manufacturer: manufacturer?.toString() };
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="orvia-medicines-${new Date().toISOString().slice(0, 10)}.csv"`);
+  const count = await meds.exportMedicinesCsv(query, (chunk) => res.write(chunk));
+  await audit(req, 'medicine.export', undefined, { count, filter: Object.fromEntries(Object.entries(query).filter(([, v]) => v)) });
+  res.end();
+});
+
 medicineRouter.get('/manufacturers', requirePermission(P.TENANT_VIEW), async (req, res) => {
   res.json(await meds.listManufacturers(req.query.q?.toString()));
 });

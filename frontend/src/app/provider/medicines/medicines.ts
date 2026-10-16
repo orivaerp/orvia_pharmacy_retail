@@ -28,6 +28,7 @@ export class Medicines implements OnInit {
   protected readonly saltList = signal<Medicine[]>([]);
   protected readonly saltLoading = signal(false);
   protected readonly showImport = signal(false);
+  protected readonly exporting = signal(false);
   protected readonly saving = signal(false);
   protected readonly formError = signal<string | null>(null);
 
@@ -62,6 +63,27 @@ export class Medicines implements OnInit {
       error: (e) => {
         this.error.set(apiError(e));
         this.loading.set(false);
+      },
+    });
+  }
+
+  /** Downloads what the search and filters show (everything when none is set). The columns are the ones Import CSV reads. */
+  protected exportCsv() {
+    this.exporting.set(true);
+    this.error.set(null);
+    this.api.exportMedicines({ q: this.q.trim(), form: this.form, status: this.status, manufacturer: this.manufacturer }).subscribe({
+      next: (blob) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `orvia-medicines-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        this.exporting.set(false);
+      },
+      error: (e) => {
+        this.exporting.set(false);
+        this.error.set('The file could not be made. Please try again.');
+        void e;
       },
     });
   }

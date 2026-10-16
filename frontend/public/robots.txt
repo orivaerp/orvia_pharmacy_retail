@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+# the signed-in app, bills shared by link, and one-time pages are not for search engines
+Disallow: /retail/
+Disallow: /provider/
+Disallow: /bill/
+Disallow: /accept-invite
+Disallow: /forgot-password
+
+Sitemap: https://pharmacy.orviaerp.com/sitemap.xml

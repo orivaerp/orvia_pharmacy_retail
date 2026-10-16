@@ -160,6 +160,8 @@ export interface StockRow {
   name: string;
   composition: string[];
   manufacturer: string;
+  form?: string;
+  strength?: string;
   schedule: string;
   gstPercent: number;
   unitsPerPack: number;

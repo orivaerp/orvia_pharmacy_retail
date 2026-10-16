@@ -36,6 +36,29 @@ export async function listManufacturers(q) {
   return rows.filter((r) => r._id).map((r) => ({ name: r._id, count: r.count }));
 }
 
+const EXPORT_COLUMNS = ['name', 'brand', 'composition', 'strength', 'form', 'unitsPerPack', 'manufacturer', 'hsn', 'gstPercent', 'schedule', 'category', 'barcodes', 'referenceMrp', 'externalCode', 'status'];
+
+// a cell that starts with = + - or @ would be run as a formula by Excel; a leading apostrophe stops that
+const csvCell = (v) => {
+  let s = Array.isArray(v) ? v.join(';') : v === undefined || v === null ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(s) && Number.isNaN(Number(s))) s = `'${s}`;
+  return /[",\r\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
+};
+
+/**
+ * The catalog (or just what the search and filters match) as CSV, written row by row so a large catalog does not fill memory.
+ * The columns are the ones the import reads, so an exported file can be edited and imported again.
+ */
+export async function exportMedicinesCsv(query, write) {
+  write('\uFEFF' + EXPORT_COLUMNS.join(',') + '\r\n');
+  let count = 0;
+  for await (const m of Medicine.find(searchFilter(query)).sort({ name: 1 }).lean().cursor()) {
+    write(EXPORT_COLUMNS.map((c) => csvCell(m[c])).join(',') + '\r\n');
+    count++;
+  }
+  return count;
+}
+
 export async function listMedicines(query, { page = 1, limit = 20 } = {}) {
   const filter = searchFilter(query);
   const [items, total] = await Promise.all([

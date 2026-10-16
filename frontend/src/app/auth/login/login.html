@@ -1,5 +1,5 @@
 <app-auth-shell>
-  <h1>{{ challenge() ? 'Two-step verification' : 'Welcome back' }}</h1>
+  <h1>{{ challenge() ? 'Two-step verification' : 'Log in to Orvia Pharmacy' }}</h1>
   <p class="au-sub">{{ challenge() ? 'Enter the code to finish signing in.' : 'Sign in to your pharmacy workspace.' }}</p>
 
   @if (resetDone) {
@@ -42,7 +42,7 @@
     <p class="au-signup">
       @if (signupUrl) { New to Orvia? <a [href]="signupUrl">Start free trial</a> }
     </p>
-    <p class="au-more">To see what Orvia pharmacy software can do, visit <a [href]="marketingUrl" target="_blank" rel="noopener">{{ marketingLabel }}</a>.</p>
+    <p class="au-more">Looking for the software, not your account? <a [href]="marketingUrl" target="_blank" rel="noopener">Features and pricing</a></p>
   } @else {
     <form (ngSubmit)="verify()" novalidate>
       <label class="au-lbl" for="code">6-digit code</label>

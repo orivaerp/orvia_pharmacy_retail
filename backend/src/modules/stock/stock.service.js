@@ -136,6 +136,8 @@ export async function stockSummary({ branchId, branchIds, q, filter, page = 1, l
       name: v.name,
       composition: v.composition,
       manufacturer: v.manufacturer,
+      form: v.form,
+      strength: v.strength,
       schedule: v.schedule,
       gstPercent: v.gstPercent,
       unitsPerPack: v.unitsPerPack,

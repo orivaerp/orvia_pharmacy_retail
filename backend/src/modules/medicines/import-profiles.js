@@ -13,20 +13,34 @@ const CONSUMABLE_GROUPS = /surgical|consumable|devices?\b/i;
 const OTC_GROUPS = /consumable|supplement|vitamin|mineral|nutraceutical|derma care|antiseptic|disinfectant|ayurved|burn relief|electrolyte/i;
 
 const FORM_RULES = [
+  // things that are not medicines come first, so "IV infusion set" is a device and not an injection
+  [/\b(stopcock|cannula|catheter|glucometer|nebuli[sz]er|thermometer|iv set|infusion set|extension line|bp monitor)\b/i, 'device'],
+  [/\b(test strips?|test kit|rapid test|pregnancy test)\b/i, 'test kit'],
+  [/\b(bandage|gauze|cotton|gloves?|face mask|diapers?|plaster)\b/i, 'consumable'],
+  [/\b(respules?|nebuli[sz]ation|nebules?)\b/i, 'respules'],
   [/\b(inhaler|mdi|rotacaps?|rotahaler)\b/i, 'inhaler'],
   [/\b(injection|infusion|inj)\b/i, 'injection'],
   [/\b(tablets?|caplets?)\b/i, 'tablet'],
   [/\bcapsules?\b/i, 'capsule'],
+  [/\bdry\s+(syrup|suspension)\b/i, 'dry syrup'],
   [/\b(syrup|elixir)\b/i, 'syrup'],
   [/\bsuspension\b/i, 'suspension'],
   [/\bdrops?\b/i, 'drops'],
   [/\bcream\b/i, 'cream'],
   [/\bointment\b/i, 'ointment'],
   [/\bgel\b/i, 'gel'],
+  [/\bliniments?\b/i, 'liniment'],
   [/\blotion\b/i, 'lotion'],
   [/\bspray\b/i, 'spray'],
+  [/\b(solution|soln)\b/i, 'solution'],
   [/\b(sachets?)\b/i, 'sachet'],
   [/\b(powder|granules)\b/i, 'powder'],
+  [/\bchurna\b/i, 'churna'],
+  [/\b(avaleha|chyawanprash|paste)\b/i, 'paste'],
+  [/\bpatch(es)?\b/i, 'patch'],
+  [/\blozenges?\b/i, 'lozenge'],
+  [/\bsuppositor(y|ies)\b/i, 'suppository'],
+  [/\boil\b/i, 'oil'],
 ];
 
 export function guessForm(name, unitSize, group) {
@@ -63,7 +77,8 @@ export function guessComposition(name, group) {
 
 export function guessUnits(unitSize) {
   const u = clean(unitSize);
-  const strip = u.match(/^(\d+)'?s\b/i) ?? u.match(/pack of (\d+)/i);
+  // "10's", "pack of 10", "strip of 10", "10 tablets", or just "10" (a plain number in a Pack column is the units in one pack)
+  const strip = u.match(/^(\d+)'?s\b/i) ?? u.match(/(?:pack|strip|box|bottle|vial) of (\d+)/i) ?? u.match(/^(\d+)\s*(?:tablets?|tabs?|capsules?|caps?|units?|pcs?|nos?)\b/i) ?? u.match(/^(\d+)$/);
   return strip ? Math.max(1, Number(strip[1])) : 1;
 }
 
@@ -123,7 +138,10 @@ const brandList = {
   map(raw, defaults) {
     let name = pick(raw, 'Brand Name');
     const strength = pick(raw, 'Strength') || guessStrength(name);
-    const pack = pick(raw, 'Pack', 'Pack Size', 'Unit Size');
+    const pack = pick(raw, 'Units Per Pack', 'unitsPerPack', 'Pack', 'Pack Size', 'Unit Size');
+    // a status written in the file is respected; without one a person has to verify it
+    const statusText = pick(raw, 'Status', 'status').toLowerCase();
+    const status = ['verified', 'pending', 'inactive'].includes(statusText) ? statusText : 'pending';
     const formText = pick(raw, 'Form').toLowerCase();
     const form = FORM_RULES.some(([, f]) => f === formText) ? formText : guessForm(name, pack, '');
     // keep the name self-explanatory: add the form if the brand name does not already say it
@@ -144,7 +162,7 @@ const brandList = {
       barcodes: pick(raw, 'Barcode', 'EAN'),
       referenceMrp: pick(raw, 'MRP'),
       externalCode: pick(raw, 'Code', 'Product Code'),
-      status: 'pending',
+      status,
     };
   },
 };

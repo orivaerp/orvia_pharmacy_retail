@@ -58,7 +58,7 @@
           <tr class="cursor-pointer border-t border-line text-xs hover:bg-chip" (click)="toggle(r)">
             <td class="py-2 pr-3">
               <div class="font-medium">{{ r.name }}</div>
-              <div class="text-[11px] text-ink-soft">{{ r.manufacturer }} · {{ r.unitsPerPack }} per pack</div>
+              <div class="text-[11px] text-ink-soft">{{ r.form }}{{ r.strength ? ' ' + r.strength : '' }} · {{ r.manufacturer }} · {{ r.unitsPerPack }} per pack</div>
             </td>
             <td class="py-2 pr-3"><span class="badge" [class]="scheduleClass[r.schedule]">{{ r.schedule }}</span></td>
             <td class="py-2 pr-3 font-medium">{{ stockText(r) }}</td>
