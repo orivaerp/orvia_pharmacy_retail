@@ -16,7 +16,7 @@ const schema = z.object({
   JWT_REFRESH_EXPIRES: z.string().default('7d'),
   CORS_ORIGIN: z.string().default('http://localhost:4200'),
   // used to build links sent to users (invites)
-  FRONTEND_URL: z.string().default('http://localhost:4200'),
+  FRONTEND_URL: z.string().default('https://pharmacy.orviaerp.com'), // also in development; set FRONTEND_URL=http://localhost:4200 to open links on your own machine
   // UPI collection through Razorpay (optional: without keys the UPI mode is only recorded, not collected)
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
