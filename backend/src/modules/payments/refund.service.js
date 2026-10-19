@@ -27,7 +27,8 @@ const statusOf = (rf) => (rf.status === 'processed' ? 'processed' : rf.status ==
 export async function sendRefund(ret) {
   const g = ret.gatewayRefund;
   try {
-    const creds = await rzp.credsForShop();
+    // a payment taken earlier with Orvia's keys can still only be refunded with them
+    const creds = (await rzp.credsForShop()) ?? rzp.platformCreds();
     if (!creds) throw new Error('Online payments are not set up for this shop.');
 
     let existing = null;

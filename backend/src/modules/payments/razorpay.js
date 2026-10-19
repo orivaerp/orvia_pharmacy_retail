@@ -14,13 +14,14 @@ const API = 'https://api.razorpay.com/v1';
 
 export const modeOf = (keyId) => (String(keyId).startsWith('rzp_live_') ? 'live' : 'test');
 
-/** The keys to use for the current shop (call inside the tenant context), or null if none are set up. */
+/**
+ * The shop's OWN Razorpay keys (call inside the tenant context), or null while the shop has not added any.
+ * The money from a customer always goes to the shop's account, never to Orvia's: Orvia's keys (platformCreds) are only for the shop's subscription invoices.
+ */
 export async function credsForShop() {
   const s = await PaymentSettings.findOne({ gateway: 'razorpay' });
-  if (s) {
-    return { keyId: s.keyId, keySecret: decrypt(s.keySecretEnc), webhookSecret: s.webhookSecretEnc ? decrypt(s.webhookSecretEnc) : undefined, source: 'shop' };
-  }
-  return platformCreds();
+  if (!s) return null;
+  return { keyId: s.keyId, keySecret: decrypt(s.keySecretEnc), webhookSecret: s.webhookSecretEnc ? decrypt(s.webhookSecretEnc) : undefined, source: 'shop' };
 }
 
 export function platformCreds() {
@@ -29,7 +30,7 @@ export function platformCreds() {
 }
 
 async function call(creds, method, path, body) {
-  if (!creds) throw ApiError.badRequest('Online UPI collection is not set up for this shop.');
+  if (!creds) throw ApiError.badRequest('Add your own Razorpay keys (Accounts > Payments) to collect UPI online.');
   let res;
   try {
     res = await fetch(API + path, {

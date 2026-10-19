@@ -24,7 +24,8 @@ const objectId = z.string().refine((v) => mongoose.isValidObjectId(v), 'Invalid 
 router.get('/upi/config', canCollect, async (req, res) => {
   const creds = await rzp.credsForShop();
   const included = await hasFeature(req.user.tenantId, 'onlinePayments');
-  res.json({ enabled: Boolean(creds) && included, includedInPlan: included, mode: creds ? rzp.modeOf(creds.keyId) : null });
+  // enabled = the shop has its own keys and the plan allows it; includedInPlan with no keys makes the counter explain how to connect Razorpay
+  res.json({ enabled: Boolean(creds) && included, includedInPlan: included, hasOwnKeys: Boolean(creds), mode: creds ? rzp.modeOf(creds.keyId) : null });
 });
 
 // 1. open an order for the UPI part of a bill
@@ -43,6 +44,7 @@ const QR_MINUTES = 10;
 router.post('/upi/qr', canCollect, requireFeature('onlinePayments'), validateBody(z.object({ branchId: objectId, amount: z.number().min(1).max(200_000) })), async (req, res) => {
   assertBranchAllowed(req, req.body.branchId);
   const creds = await rzp.credsForShop();
+  if (!creds) throw ApiError.badRequest('Add your own Razorpay keys (Accounts > Payments) to collect UPI online.');
   const amountPaise = Math.round(req.body.amount * 100);
   const closeBy = Math.floor(Date.now() / 1000) + QR_MINUTES * 60;
   let qr;
@@ -63,6 +65,7 @@ router.get('/upi/qr/:qrId', canCollect, async (req, res) => {
   if (rec.status !== 'created') return res.json({ status: 'paid', paymentId: rec.paymentId, amount: rec.amount });
 
   const creds = await rzp.credsForShop();
+  if (!creds) throw ApiError.badRequest('Add your own Razorpay keys (Accounts > Payments) to collect UPI online.');
   const list = await rzp.fetchQrPayments(creds, rec.orderId);
   const paid = (list.items ?? []).find((p) => p.status === 'captured' && p.amount === Math.round(rec.amount * 100));
   if (!paid) return res.json({ status: 'waiting' });
@@ -97,6 +100,7 @@ router.post(
     assertBranchAllowed(req, rec.branchId);
     if (rec.status === 'used') throw ApiError.conflict('This payment is already attached to a bill');
     const creds = await rzp.credsForShop();
+    if (!creds) throw ApiError.badRequest('Add your own Razorpay keys (Accounts > Payments) to collect UPI online.');
     if (!rzp.verifySignature(creds, orderId, paymentId, signature)) throw ApiError.badRequest('The payment could not be verified');
 
     // trust the gateway, not the browser: ask Razorpay what really happened
@@ -130,10 +134,9 @@ router.get('/upi/unclaimed', requireAny(P.USER_MANAGE, P.REPORTS_VIEW), async (r
 // ---------------------------------------------------------------- the shop's own gateway keys
 const view = async (req) => {
   const s = await PaymentSettings.findOne({ gateway: 'razorpay' });
-  const platform = rzp.platformCreds();
-  const keyId = s?.keyId ?? platform?.keyId ?? null;
+  const keyId = s?.keyId ?? null;
   return {
-    source: s ? 'shop' : platform ? 'platform' : 'none',
+    source: s ? 'shop' : 'none',
     keyId: keyId ? `${keyId.slice(0, 13)}••••` : null,
     mode: keyId ? rzp.modeOf(keyId) : null,
     hasWebhookSecret: Boolean(s?.webhookSecretEnc),

@@ -25,11 +25,11 @@ table{width:100%;border-collapse:collapse;margin-top:18px}th,td{padding:8px 0;bo
 small{color:#555}@page{margin:12mm}
 </style></head><body>
 <div class="row" style="margin-top:0"><div><h1>${esc(company.name ?? 'Orvia')}</h1><div>${esc(company.address)}</div>${company.gstin ? `<div>GSTIN: ${esc(company.gstin)}</div>` : ''}</div>
-<div class="r"><h2>Tax invoice</h2><div><b>${esc(inv.number)}</b></div><div>Date: ${day(inv.issuedAt)}</div><div>Due: ${day(inv.dueDate)}</div><div style="margin-top:6px"><span class="stamp">${paid ? 'PAID' : inv.status === 'void' ? 'VOID' : 'UNPAID'}</span></div></div></div>
+<div class="r"><h2>${inv.gst > 0 ? 'Tax invoice' : 'Invoice'}</h2><div><b>${esc(inv.number)}</b></div><div>Date: ${day(inv.issuedAt)}</div><div>Due: ${day(inv.dueDate)}</div><div style="margin-top:6px"><span class="stamp">${paid ? 'PAID' : inv.status === 'void' ? 'VOID' : 'UNPAID'}</span></div></div></div>
 <div class="row"><div><h2>Billed to</h2><div><b>${esc(shop.name)}</b></div><div>${esc(shop.address)}</div>${shop.gstin ? `<div>GSTIN: ${esc(shop.gstin)}</div>` : ''}</div></div>
 <table><tr><th>Description</th><th class="r">Amount</th></tr>
 <tr><td>Orvia ${esc(inv.planName)} plan, ${inv.cycle}<br><small>${day(inv.periodStart)} to ${day(inv.periodEnd)}</small></td><td class="r">${inr(inv.amount)}</td></tr>
-<tr><td>GST @ ${inv.gstPercent}%</td><td class="r">${inr(inv.gst)}</td></tr>
+${inv.gst > 0 ? `<tr><td>GST @ ${inv.gstPercent}%</td><td class="r">${inr(inv.gst)}</td></tr>` : ''}
 <tr class="total"><td>Total</td><td class="r">${inr(inv.total)}</td></tr></table>
 ${paid ? `<p>Paid on ${day(inv.paidAt ?? inv.issuedAt)} by ${esc(inv.method)}${inv.reference ? ' (ref ' + esc(inv.reference) + ')' : ''}.</p>` : company.bankDetails ? `<p><b>Pay by bank transfer:</b> ${esc(company.bankDetails)}<br><small>Mention ${esc(inv.number)} as the reference.</small></p>` : ''}
 <p><small>This is a computer-generated invoice.</small></p>

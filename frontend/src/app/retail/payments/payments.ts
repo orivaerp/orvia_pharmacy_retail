@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { apiError } from '../../shared/utils/api';
 
 interface Settings {
-  source: 'shop' | 'platform' | 'none';
+  source: 'shop' | 'none';
   keyId: string | null;
   mode: 'live' | 'test' | null;
   hasWebhookSecret: boolean;
@@ -40,13 +40,12 @@ interface Unclaimed {
           <h2 class="text-sm font-medium">Razorpay account</h2>
           <span class="flex gap-1">
             @if (st.mode) { <span class="badge" [class]="st.mode === 'live' ? 'bg-tone-lime' : 'bg-tone-rose'">{{ st.mode === 'live' ? 'LIVE: real money' : 'TEST mode' }}</span> }
-            <span class="badge bg-chip">{{ st.source === 'shop' ? 'your own keys' : st.source === 'platform' ? 'Orvia default keys' : 'not set up' }}</span>
+            <span class="badge bg-chip">{{ st.source === 'shop' ? 'your own keys' : 'not set up' }}</span>
           </span>
         </div>
         <p class="mt-1 text-xs text-ink-soft">
           @if (st.source === 'shop') { UPI payments go to <b>your</b> Razorpay account ({{ st.keyId }}). }
-          @else if (st.source === 'platform') { UPI payments currently go to the account Orvia is set up with ({{ st.keyId }}). Add your own keys below to receive the money directly. }
-          @else { UPI collection through Razorpay is not set up. UPI is still recorded when the customer pays on your own QR. }
+          @else { UPI collection through Razorpay is not set up. Add <b>your own</b> Razorpay keys below to take UPI at the counter; the money goes to your account. Until then, UPI is still recorded when the customer pays on your own QR. }
         </p>
 
         @if (st.canSaveKeys) {

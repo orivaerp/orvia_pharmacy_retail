@@ -45,7 +45,7 @@ const FEATURES: [string, string][] = [
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 class="text-base font-medium">{{ b.plan?.name ?? 'No plan' }}</h2>
-            @if (b.plan) { <p class="text-xs text-ink-soft">{{ b.plan.price | currency: 'INR' : 'symbol' : '1.0-0' }} per {{ b.plan.cycle === 'yearly' ? 'year' : 'month' }} + {{ b.gstPercent }}% GST</p> }
+            @if (b.plan) { <p class="text-xs text-ink-soft">{{ b.plan.price | currency: 'INR' : 'symbol' : '1.0-0' }} per {{ b.plan.cycle === 'yearly' ? 'year' : 'month' }} @if (b.gstPercent > 0) { + {{ b.gstPercent }}% GST }</p> }
           </div>
           <span class="badge" [class]="stateClass[b.state.state]">{{ stateLabel[b.state.state] }}</span>
         </div>

@@ -12,7 +12,7 @@ import { PlanCards, PublicPlan } from './plan-cards';
   template: `
     <app-auth-shell [wide]="true">
       <h1>Simple pricing for every pharmacy</h1>
-      <p class="au-sub">Start free, pick the plan that fits your shop, and change later. Prices are before GST. Choose a plan to start your free trial.</p>
+      <p class="au-sub">Start free, pick the plan that fits your shop, and change later.{{ plans().some((p) => p.gstPercent > 0) ? ' Prices are before GST.' : '' }} Choose a plan to start your free trial.</p>
       <app-plan-cards layout="grid" [plans]="plans()" [loading]="loading()" (pick)="start($event)" />
       <p class="au-signup">Already have an account? <a routerLink="/login">Sign in</a></p>
       <p class="au-legal">Licensed pharmacy software · Your data is encrypted and audited.</p>

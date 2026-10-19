@@ -176,7 +176,7 @@ export class SalesApi {
   }
 
   upiEnabled() {
-    return this.http.get<{ enabled: boolean }>(`${environment.apiUrl}/payments/upi/config`);
+    return this.http.get<{ enabled: boolean; includedInPlan: boolean; hasOwnKeys: boolean }>(`${environment.apiUrl}/payments/upi/config`);
   }
 
   upiOrder(branchId: string, amount: number) {

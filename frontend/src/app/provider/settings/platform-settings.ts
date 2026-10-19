@@ -40,7 +40,7 @@ const NUMBERS = ['billingGstPercent', 'billingGraceDays', 'signupTrialDays'];
         <section class="card">
           <h2 class="text-sm font-medium">Billing and sign-up</h2>
           <div class="mt-3 grid gap-3 sm:grid-cols-2">
-            <div><label class="label" for="s-gst">GST on subscriptions (%)</label><input id="s-gst" name="billingGstPercent" type="number" min="0" max="40" step="0.5" class="field" [placeholder]="hint('billingGstPercent')" [(ngModel)]="f['billingGstPercent']" /></div>
+            <div><label class="label" for="s-gst">GST on subscriptions (%)</label><input id="s-gst" name="billingGstPercent" type="number" min="0" max="40" step="0.5" class="field" [placeholder]="hint('billingGstPercent')" [(ngModel)]="f['billingGstPercent']" /><p class="mt-1 text-[11px] text-ink-soft">0 means no GST on invoices.</p></div>
             <div><label class="label" for="s-grace">Days to pay after the due date</label><input id="s-grace" name="billingGraceDays" type="number" min="0" max="60" class="field" [placeholder]="hint('billingGraceDays')" [(ngModel)]="f['billingGraceDays']" /></div>
             <div class="sm:col-span-2"><label class="label" for="s-trial">Free trial for a new shop that signs up itself (days)</label><input id="s-trial" name="signupTrialDays" type="number" min="0" max="90" class="field" [placeholder]="hint('signupTrialDays')" [(ngModel)]="f['signupTrialDays']" /><p class="mt-1 text-[11px] text-ink-soft">Used for a paid plan that has no trial days of its own. A plan's own trial days win.</p></div>
           </div>

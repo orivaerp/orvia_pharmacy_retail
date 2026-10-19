@@ -42,7 +42,7 @@ const FEATURE_LABELS: Record<string, string> = {
             <b>{{ p.name }}</b>
             @if (p.trialDays > 0) { <span class="au-plan-trial">{{ p.trialDays }} days free</span> }
             <span class="au-plan-price">
-              @if (p.price > 0) { {{ p.price | currency: 'INR' : 'symbol' : '1.0-0' }}<small> / {{ p.cycle === 'yearly' ? 'yr' : 'mo' }} + {{ p.gstPercent }}% GST</small> } @else { Free }
+              @if (p.price > 0) { {{ p.price | currency: 'INR' : 'symbol' : '1.0-0' }}<small> / {{ p.cycle === 'yearly' ? 'yr' : 'mo' }} @if (p.gstPercent > 0) { + {{ p.gstPercent }}% GST }</small> } @else { Free }
             </span>
           </span>
           @if (p.tagline) { <span class="au-plan-tag">{{ p.tagline }}</span> }

@@ -237,7 +237,7 @@ const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
             <p class="mt-1 text-[11px]" [class]="splitDiff() === 0 ? 'text-ink-soft' : 'text-red-700'">{{ splitDiff() === 0 ? 'Payments match the bill.' : (splitDiff() > 0 ? splitDiff() + ' still to collect' : -splitDiff() + ' too much') }}</p>
           }
 
-          @if (upiEnabled() && upiAmount() > 0) {
+          @if ((upiEnabled() || upiInPlan()) && upiAmount() > 0) {
             <div class="mt-3 rounded-xl border border-line p-2 text-xs">
               @if (upiPaid(); as u) {
                 <p [class]="upiMismatch() ? 'text-red-700' : ''">
@@ -289,6 +289,21 @@ const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
         @if (error()) { <p role="alert" class="mb-1 w-full rounded-lg bg-red-50 px-2 py-1 text-xs text-red-700">{{ error() }}</p> }
         <div><p class="text-[11px] text-ink-soft">{{ cart().length }} item{{ cart().length === 1 ? '' : 's' }} · To pay</p><p class="text-lg font-medium">{{ totals().grand | currency: 'INR' : 'symbol' : '1.0-0' }}</p></div>
         <button type="button" class="btn btn-primary !min-h-11 px-6" [disabled]="saving() || !cart().length" (click)="save()">{{ saving() ? 'Saving…' : 'Save bill' }}</button>
+      </div>
+    }
+
+    @if (upiInfo()) {
+      <div class="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label="Connect Razorpay">
+        <div class="w-full max-w-sm rounded-2xl bg-surface-solid p-4 shadow-xl">
+          <h2 class="text-base font-medium">Razorpay is not connected</h2>
+          <p class="mt-2 text-xs text-ink-soft">To take UPI payments here, add <b>your own Razorpay keys</b>. The money then goes straight to your Razorpay account.</p>
+          <p class="mt-2 text-xs text-ink-soft">Until then, you can save this bill with UPI when the customer has paid on your own QR.</p>
+          <div class="mt-4 flex justify-end gap-2">
+            <button type="button" class="btn btn-ghost" (click)="upiInfo.set(false)">Close</button>
+            @if (canManagePay()) { <a routerLink="/retail/payments" class="btn btn-primary" (click)="upiInfo.set(false)">Add Razorpay keys</a> }
+            @else { <span class="self-center text-[11px] text-ink-soft">Ask the shop owner to add them under Accounts &gt; Payments.</span> }
+          </div>
+        </div>
       </div>
     }
 
@@ -350,7 +365,10 @@ export class Pos {
     if (!c || credit <= 0 || !c.creditLimit) return null;
     return c.owes + credit > c.creditLimit ? `${c.name} owes ₹${c.owes}; with this bill that is over the ₹${c.creditLimit} limit.` : null;
   });
-  protected readonly upiEnabled = signal(false);
+  protected readonly upiEnabled = signal(false); // the shop has its own Razorpay keys and the plan allows online UPI
+  protected readonly upiInPlan = signal(false); // the plan allows it, but keys may be missing
+  protected readonly upiInfo = signal(false); // the "add your Razorpay keys" box
+  protected readonly canManagePay = computed(() => this.auth.hasPermission('user.manage'));
   protected readonly collecting = signal(false);
   protected readonly qr = signal<{ qrId: string; imageUrl: string; amount: number; expiresAt: number } | null>(null);
   protected readonly qrBusy = signal(false);
@@ -421,7 +439,7 @@ export class Pos {
 
   constructor() {
     this.ctx.load();
-    this.api.upiEnabled().subscribe({ next: (r) => this.upiEnabled.set(r.enabled), error: () => this.upiEnabled.set(false) });
+    this.api.upiEnabled().subscribe({ next: (r) => { this.upiEnabled.set(r.enabled); this.upiInPlan.set(r.includedInPlan); }, error: () => this.upiEnabled.set(false) });
     effect(() => {
       const outlet = this.outletId();
       untracked(() => this.loadHolds(outlet));
@@ -430,6 +448,7 @@ export class Pos {
 
   /** Opens Razorpay Checkout for the UPI amount. The bill is only saved after the server has verified the payment. */
   protected async collectUpi() {
+    if (!this.upiEnabled()) return this.upiInfo.set(true);
     this.error.set(null);
     const branchId = this.outletId();
     const amount = this.upiAmount();
@@ -486,6 +505,7 @@ export class Pos {
   /** Puts a payment QR on screen and watches for the money. The bill is saved afterwards, as with Checkout. */
   protected showQr() {
     this.error.set(null);
+    if (!this.upiEnabled()) return this.upiInfo.set(true);
     const branchId = this.outletId();
     const amount = this.upiAmount();
     if (!branchId || amount < 1) return this.error.set('The UPI amount must be at least ₹1.');
