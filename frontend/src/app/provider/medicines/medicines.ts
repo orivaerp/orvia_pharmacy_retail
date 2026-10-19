@@ -1,19 +1,44 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/components/icon';
+import { StatCard, Tone } from '../../shared/components/stat-card';
 import { FORMS, Medicine, SCHEDULE_CLASS } from '../../shared/models/medicine';
-import { MedicinePayload, ProviderApi, apiError } from '../provider-api.service';
+import { MedicinePayload, MedicineStats, ProviderApi, apiError } from '../provider-api.service';
 import { ImportDialog } from './import-dialog';
 import { MedicineFormDialog } from './medicine-form-dialog';
 
 @Component({
   selector: 'app-medicines',
-  imports: [Icon, MedicineFormDialog, ImportDialog],
+  imports: [Icon, MedicineFormDialog, ImportDialog, DecimalPipe, RouterLink, StatCard],
   templateUrl: './medicines.html',
 })
 export class Medicines implements OnInit {
   private readonly api = inject(ProviderApi);
 
   protected readonly forms = FORMS;
+
+  /** the cards above the list, built like the ones on the platform overview */
+  protected readonly cards = computed(() => {
+    const s = this.stats();
+    if (!s) return [];
+    const n = (v: number) => v.toLocaleString('en-IN');
+    const pct = (v: number) => (s.total ? Math.round((v / s.total) * 100) : 0);
+    // the bars under a status card: its share of the catalog (a full bar is the whole catalog)
+    const share = (v: number) => [Math.max(8, pct(v))];
+    const topForms = s.byForm.slice(0, 3).map((f) => f.form + ' ' + n(f.count)).join(', ') + (s.byForm.length > 3 ? ', …' : '');
+    const sched = ['OTC', 'H', 'H1', 'X', 'NDPS'].filter((k) => s.schedule[k]).map((k) => k + ' ' + n(s.schedule[k]));
+    return [
+      { label: 'Total Medicines', value: n(s.total), note: n(s.addedThisWeek) + ' added in the last 7 days', icon: 'pill', tone: 'lime' as Tone, spark: [] as number[], filter: '' },
+      { label: 'Verified', value: n(s.status.verified), note: pct(s.status.verified) + '% of the catalog', icon: 'card', tone: 'teal' as Tone, spark: share(s.status.verified), filter: 'verified' },
+      { label: 'Pending', value: n(s.status.pending), note: pct(s.status.pending) + '% of the catalog', icon: 'calendar', tone: 'rose' as Tone, spark: share(s.status.pending), filter: 'pending' },
+      { label: 'Inactive', value: n(s.status.inactive), note: pct(s.status.inactive) + '% of the catalog', icon: 'bag', tone: 'lavender' as Tone, spark: [] as number[], filter: 'inactive' },
+      { label: 'Manufacturers', value: n(s.manufacturers), note: '', icon: 'users', tone: 'lime' as Tone, spark: [] as number[], filter: '' },
+      { label: 'Forms in Use', value: String(s.forms), note: topForms, icon: 'chart', tone: 'teal' as Tone, spark: [] as number[], filter: '' },
+      { label: 'By Schedule', value: sched.slice(0, 2).join(' · ') || '0', note: sched.slice(2).join(' · '), icon: 'file', tone: 'rose' as Tone, spark: [] as number[], filter: '' },
+      { label: 'With a Barcode', value: n(s.withBarcode), note: pct(s.withBarcode) + '% of the catalog', icon: 'cart', tone: 'lavender' as Tone, spark: [] as number[], filter: '' },
+    ];
+  });
   protected readonly scheduleClass = SCHEDULE_CLASS;
   protected readonly items = signal<Medicine[]>([]);
   protected readonly total = signal(0);
@@ -39,12 +64,50 @@ export class Medicines implements OnInit {
   protected readonly makers = signal<{ name: string; count: number }[]>([]);
   private makerTimer?: ReturnType<typeof setTimeout>;
   protected page = 1;
-  protected readonly limit = 20;
+  protected readonly pageSizes = [10, 25, 50, 75, 100];
+  protected limit = 25;
+  protected readonly stats = signal<MedicineStats | null>(null);
   private timer?: ReturnType<typeof setTimeout>;
 
   ngOnInit() {
+    try {
+      const saved = Number(localStorage.getItem('orvia.medicines.pageSize'));
+      if (this.pageSizes.includes(saved)) this.limit = saved;
+    } catch {
+      /* the page still works without a remembered size */
+    }
+    this.loadStats();
     this.api.manufacturers('').subscribe((r) => this.makers.set(r));
     this.load();
+  }
+
+  protected get from() {
+    return this.total() ? (this.page - 1) * this.limit + 1 : 0;
+  }
+
+  protected get to() {
+    return Math.min(this.total(), this.page * this.limit);
+  }
+
+  protected setPageSize(n: number) {
+    this.limit = n;
+    try {
+      localStorage.setItem('orvia.medicines.pageSize', String(n));
+    } catch {
+      /* not remembered, still applied now */
+    }
+    this.page = 1;
+    this.load();
+  }
+
+  protected loadStats() {
+    this.api.medicineStats().subscribe({ next: (s) => this.stats.set(s), error: () => undefined });
+  }
+
+  /** a status card filters the list to that status; the same card again clears it */
+  protected pickStatus(s: string) {
+    this.status = this.status === s ? '' : s;
+    this.filtersChanged();
   }
 
   protected get pages() {
@@ -52,6 +115,7 @@ export class Medicines implements OnInit {
   }
 
   protected load() {
+    this.loadStats();
     this.loading.set(true);
     this.api.medicines({ q: this.q.trim(), form: this.form, status: this.status, manufacturer: this.manufacturer, page: this.page, limit: this.limit }).subscribe({
       next: (r) => {

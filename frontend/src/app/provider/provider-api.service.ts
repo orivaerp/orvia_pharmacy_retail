@@ -10,6 +10,18 @@ export type { Page };
 
 export type ShopStatus = 'trial' | 'active' | 'suspended';
 
+export interface MedicineStats {
+  total: number;
+  status: { verified: number; pending: number; inactive: number };
+  manufacturers: number;
+  forms: number;
+  byForm: { form: string; count: number }[];
+  schedule: Record<string, number>;
+  withBarcode: number;
+  addedThisWeek: number;
+  shopRequestsWaiting: number;
+}
+
 export interface Plan {
   _id: string;
   name: string;
@@ -247,6 +259,10 @@ export class ProviderApi {
     let params = new HttpParams();
     for (const [k, v] of Object.entries(filters)) if (v !== undefined && v !== '') params = params.set(k, String(v));
     return this.http.get(`${this.base}/medicines/export`, { params, responseType: 'blob' });
+  }
+
+  medicineStats() {
+    return this.http.get<MedicineStats>(`${this.base}/medicines/stats`);
   }
 
   manufacturers(q: string) {

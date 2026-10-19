@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, input, output } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FORMS, GST_RATES, Medicine, SCHEDULES } from '../../shared/models/medicine';
 import { splitList } from '../../shared/utils/api';
 import { MedicinePayload } from '../provider-api.service';
@@ -21,7 +21,7 @@ import { MedicinePayload } from '../provider-api.service';
         <form [formGroup]="form" (ngSubmit)="submit()" class="mt-4 grid gap-3 sm:grid-cols-6" novalidate>
           <div class="sm:col-span-4"><label class="label" for="m-name">Name * <span class="font-normal">(with strength and form)</span></label><input id="m-name" class="field" formControlName="name" placeholder="Paracetamol 500mg Tablet" /></div>
           <div class="sm:col-span-2"><label class="label" for="m-brand">Brand</label><input id="m-brand" class="field" formControlName="brand" /></div>
-          <div class="sm:col-span-4"><label class="label" for="m-comp">Composition (salts) * <span class="font-normal">separate with ;</span></label><input id="m-comp" class="field" formControlName="composition" placeholder="Amoxicillin; Clavulanic Acid" /></div>
+          <div class="sm:col-span-4"><label class="label" for="m-comp">Composition (salts) * <span class="font-normal">separate with ;</span></label><input id="m-comp" class="field" formControlName="composition" placeholder="Amoxicillin; Clavulanic Acid" />@if (form.controls.composition.hasError('maxItem')) { <p class="mt-1 text-[11px] text-red-700">Each salt can be up to 250 characters. Split a long one with ;</p> }</div>
           <div class="sm:col-span-2"><label class="label" for="m-str">Strength</label><input id="m-str" class="field" formControlName="strength" placeholder="500mg" /></div>
           <div class="sm:col-span-2">
             <label class="label" for="m-form">Form *</label>
@@ -73,7 +73,7 @@ export class MedicineFormDialog implements OnInit {
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     brand: [''],
-    composition: ['', Validators.required],
+    composition: ['', [Validators.required, (c: AbstractControl) => (splitList(String(c.value ?? '')).some((s) => s.length > 250) ? { maxItem: true } : null)]],
     strength: [''],
     form: ['tablet', Validators.required],
     unitsPerPack: [1, [Validators.required, Validators.min(1)]],

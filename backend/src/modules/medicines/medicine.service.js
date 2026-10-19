@@ -1,6 +1,7 @@
 import { ApiError } from '../../utils/ApiError.js';
 import { parseCsv } from '../../utils/csv.js';
 import { Medicine, dedupeKey } from './medicine.model.js';
+import { MedicineRequest } from './request.model.js';
 import { detectProfile } from './import-profiles.js';
 import { saltKeyOf } from './salt-key.js';
 import { medicineSchema } from './medicine.schema.js';
@@ -57,6 +58,38 @@ export async function exportMedicinesCsv(query, write) {
     count++;
   }
   return count;
+}
+
+/** The numbers above the Medicine Master list: the whole catalog, whatever the list is filtered to. */
+export async function catalogStats() {
+  const week = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const [r] = await Medicine.aggregate([
+    {
+      $facet: {
+        total: [{ $count: 'n' }],
+        status: [{ $group: { _id: '$status', n: { $sum: 1 } } }],
+        schedule: [{ $group: { _id: '$schedule', n: { $sum: 1 } } }],
+        form: [{ $group: { _id: '$form', n: { $sum: 1 } } }, { $sort: { n: -1 } }],
+        makers: [{ $group: { _id: { $toLower: { $trim: { input: '$manufacturer' } } } } }, { $count: 'n' }],
+        barcode: [{ $match: { 'barcodes.0': { $exists: true } } }, { $count: 'n' }],
+        recent: [{ $match: { createdAt: { $gte: week } } }, { $count: 'n' }],
+      },
+    },
+  ]);
+  const by = (rows) => Object.fromEntries(rows.map((x) => [x._id ?? 'unknown', x.n]));
+  const total = r.total[0]?.n ?? 0;
+  const status = by(r.status);
+  return {
+    total,
+    status: { verified: status.verified ?? 0, pending: status.pending ?? 0, inactive: status.inactive ?? 0 },
+    manufacturers: r.makers[0]?.n ?? 0,
+    forms: r.form.length,
+    byForm: r.form.map((x) => ({ form: x._id, count: x.n })),
+    schedule: by(r.schedule),
+    withBarcode: r.barcode[0]?.n ?? 0,
+    addedThisWeek: r.recent[0]?.n ?? 0,
+    shopRequestsWaiting: await MedicineRequest.countDocuments({ status: 'pending' }),
+  };
 }
 
 export async function listMedicines(query, { page = 1, limit = 20 } = {}) {

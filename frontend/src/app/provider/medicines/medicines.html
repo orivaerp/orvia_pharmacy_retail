@@ -10,6 +10,29 @@
   </div>
 </div>
 
+@if (stats(); as st) {
+  @if (st.shopRequestsWaiting) {
+    <a routerLink="/provider/medicine-requests" class="mt-4 block rounded-xl bg-tone-lavender px-3 py-2 text-xs hover:opacity-90">
+      <b>{{ st.shopRequestsWaiting }}</b> medicine{{ st.shopRequestsWaiting === 1 ? '' : 's' }} suggested by shops {{ st.shopRequestsWaiting === 1 ? 'is' : 'are' }} waiting for your review &rarr;
+    </a>
+  }
+
+  <section class="card mt-4">
+    <h2 class="text-base font-medium sm:text-lg">Catalog Overview</h2>
+    <div class="mt-3 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+      @for (c of cards(); track c.label) {
+        @if (c.filter) {
+          <button type="button" class="block w-full rounded-xl text-left transition" [class]="status === c.filter ? 'ring-2 ring-(--brand) ring-offset-2' : 'hover:opacity-90'" [attr.aria-pressed]="status === c.filter" [attr.title]="status === c.filter ? 'Showing only ' + c.filter + '. Click to show all.' : 'Show only ' + c.filter" (click)="pickStatus(c.filter)">
+            <app-stat-card [label]="c.label" [value]="c.value" [change]="c.note" period="" [icon]="c.icon" [tone]="c.tone" [spark]="c.spark" />
+          </button>
+        } @else {
+          <app-stat-card [label]="c.label" [value]="c.value" [change]="c.note" period="" [icon]="c.icon" [tone]="c.tone" [spark]="c.spark" />
+        }
+      }
+    </div>
+  </section>
+}
+
 <section class="card mt-4">
   <div class="flex flex-wrap items-center gap-2">
     <label class="flex h-9 min-w-52 flex-1 items-center gap-2 rounded-full border border-line bg-white/70 px-3 text-ink-soft">
@@ -87,12 +110,20 @@
     </table>
   </div>
 
-  @if (total() > limit) {
-    <div class="mt-3 flex items-center justify-between text-xs text-ink-soft">
-      <span>Page {{ page }} of {{ pages }}</span>
-      <div class="flex gap-2">
-        <button type="button" class="btn btn-ghost" [disabled]="page <= 1" (click)="go(-1)">Previous</button>
-        <button type="button" class="btn btn-ghost" [disabled]="page >= pages" (click)="go(1)">Next</button>
+  @if (total() > 0) {
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-soft">
+      <span>Showing {{ from | number }} to {{ to | number }} of {{ total() | number }}</span>
+      <div class="flex flex-wrap items-center gap-3">
+        <label class="flex items-center gap-1.5">Rows
+          <select class="field w-auto !py-1" aria-label="Rows per page" (change)="setPageSize(+$any($event.target).value)">
+            @for (n of pageSizes; track n) { <option [value]="n" [selected]="n === limit">{{ n }}</option> }
+          </select>
+        </label>
+        <span>Page {{ page }} of {{ pages }}</span>
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-ghost" [disabled]="page <= 1" (click)="go(-1)">Previous</button>
+          <button type="button" class="btn btn-ghost" [disabled]="page >= pages" (click)="go(1)">Next</button>
+        </div>
       </div>
     </div>
   }

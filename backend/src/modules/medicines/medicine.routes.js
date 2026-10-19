@@ -35,6 +35,10 @@ medicineRouter.get('/export', requirePermission(P.TENANT_VIEW), async (req, res)
   res.end();
 });
 
+medicineRouter.get('/stats', requirePermission(P.TENANT_VIEW), async (_req, res) => {
+  res.json(await meds.catalogStats());
+});
+
 medicineRouter.get('/manufacturers', requirePermission(P.TENANT_VIEW), async (req, res) => {
   res.json(await meds.listManufacturers(req.query.q?.toString()));
 });
