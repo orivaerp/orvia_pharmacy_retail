@@ -13,6 +13,15 @@ const schema = new mongoose.Schema(
     companyAddress: String,
     companyGstin: String,
     bankDetails: String,
+    companyPan: String,
+    companyPhone: String,
+    companyEmail: String,
+    companyWebsite: String,
+    companyLogo: String,
+    invoiceNote: String,
+    invoiceTerms: String,
+    invoiceLayout: String,
+    invoiceAccent: String,
     billingGstPercent: Number,
     billingGraceDays: Number,
     signupTrialDays: Number,
@@ -26,13 +35,22 @@ const schema = new mongoose.Schema(
 );
 const Settings = mongoose.model('PlatformSettings', schema);
 
-export const FIELDS = ['companyName', 'companyAddress', 'companyGstin', 'bankDetails', 'billingGstPercent', 'billingGraceDays', 'signupTrialDays', 'supportEmail', 'supportPhone', 'grievanceName', 'grievanceEmail'];
+export const FIELDS = ['companyName', 'companyAddress', 'companyGstin', 'bankDetails', 'companyPan', 'companyPhone', 'companyEmail', 'companyWebsite', 'companyLogo', 'invoiceNote', 'invoiceTerms', 'invoiceLayout', 'invoiceAccent', 'billingGstPercent', 'billingGraceDays', 'signupTrialDays', 'supportEmail', 'supportPhone', 'grievanceName', 'grievanceEmail'];
 
 const fromEnv = () => ({
   companyName: env.COMPANY_NAME,
   companyAddress: env.COMPANY_ADDRESS ?? '',
   companyGstin: env.COMPANY_GSTIN ?? '',
   bankDetails: env.BANK_DETAILS ?? '',
+  companyPan: '',
+  companyPhone: '',
+  companyEmail: '',
+  companyWebsite: '',
+  companyLogo: '',
+  invoiceNote: 'This is a computer-generated invoice.',
+  invoiceTerms: '',
+  invoiceLayout: 'classic',
+  invoiceAccent: '#0b3d3a',
   billingGstPercent: env.BILLING_GST_PERCENT,
   billingGraceDays: env.BILLING_GRACE_DAYS,
   signupTrialDays: env.SIGNUP_TRIAL_DAYS,

@@ -237,7 +237,7 @@ const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
             <p class="mt-1 text-[11px]" [class]="splitDiff() === 0 ? 'text-ink-soft' : 'text-red-700'">{{ splitDiff() === 0 ? 'Payments match the bill.' : (splitDiff() > 0 ? splitDiff() + ' still to collect' : -splitDiff() + ' too much') }}</p>
           }
 
-          @if ((upiEnabled() || upiInPlan()) && upiAmount() > 0) {
+          @if (upiInPlan() && upiAmount() > 0) {
             <div class="mt-3 rounded-xl border border-line p-2 text-xs">
               @if (upiPaid(); as u) {
                 <p [class]="upiMismatch() ? 'text-red-700' : ''">
@@ -248,6 +248,18 @@ const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
                 <button type="button" class="btn btn-primary w-full" [disabled]="qrBusy() || collecting() || saving()" (click)="showQr()">{{ qrBusy() ? 'Making the QR…' : 'Show QR for ₹' + upiAmount() }}</button>
                 <button type="button" class="mt-1 w-full text-center text-[11px] underline" [disabled]="collecting() || saving()" (click)="collectUpi()">{{ collecting() ? 'Opening…' : 'Other ways to pay (UPI app or UPI ID)' }}</button>
                 <p class="mt-1 text-[11px] text-ink-soft">Or save directly if the customer already paid on your own QR.</p>
+              }
+            </div>
+          }
+
+          @if (ownUpi() && !upiInPlan() && upiAmount() > 0) {
+            <div class="mt-3 rounded-xl border border-line p-2 text-xs">
+              @if (ownPaid() === upiAmount()) {
+                <p><b>UPI ₹{{ ownPaid() }} marked as received.</b> Save the bill to finish.</p>
+                <button type="button" class="mt-1 text-[11px] underline" (click)="ownPaid.set(null)">Not received after all</button>
+              } @else {
+                <button type="button" class="btn btn-primary w-full" [disabled]="ownBusy() || saving()" (click)="showOwnQr()">{{ ownBusy() ? 'Making the QR…' : 'Show my QR for ₹' + upiAmount() }}</button>
+                <p class="mt-1 text-[11px] text-ink-soft">The customer pays into your own account. When the money arrives, press Payment received.</p>
               }
             </div>
           }
@@ -302,6 +314,23 @@ const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
             <button type="button" class="btn btn-ghost" (click)="upiInfo.set(false)">Close</button>
             @if (canManagePay()) { <a routerLink="/retail/payments" class="btn btn-primary" (click)="upiInfo.set(false)">Add Razorpay keys</a> }
             @else { <span class="self-center text-[11px] text-ink-soft">Ask the shop owner to add them under Accounts &gt; Payments.</span> }
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (ownQr(); as o) {
+      <div class="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label="Scan to pay">
+        <div class="w-full max-w-sm rounded-2xl bg-surface-solid p-4 text-center shadow-xl">
+          <p class="text-xs text-ink-soft">Customer scans with any UPI app</p>
+          <p class="text-2xl font-medium">₹{{ o.amount }}</p>
+          <img [src]="o.imageUrl" alt="UPI QR code to pay ₹{{ o.amount }}" class="mx-auto mt-2 max-h-[60vh] w-auto rounded-xl border border-line bg-white" />
+          @if (o.payeeName || o.upiId) { <p class="mt-2 text-xs text-ink-soft">{{ o.payeeName }}{{ o.payeeName && o.upiId ? ' · ' : '' }}{{ o.upiId }}</p> }
+          @if (o.kind === 'picture') { <p class="mt-1 text-[11px] text-ink-soft">This is your own QR picture. The customer types ₹{{ o.amount }} before paying.</p> }
+          <p class="mt-2 text-[11px] text-ink-soft">Check that the money has arrived in your account or on your phone before you press the button.</p>
+          <div class="mt-3 flex justify-center gap-2">
+            <button type="button" class="btn btn-primary" (click)="ownReceived()">Payment received</button>
+            <button type="button" class="btn btn-ghost" (click)="ownQr.set(null)">Close</button>
           </div>
         </div>
       </div>
@@ -368,6 +397,10 @@ export class Pos {
   protected readonly upiEnabled = signal(false); // the shop has its own Razorpay keys and the plan allows online UPI
   protected readonly upiInPlan = signal(false); // the plan allows it, but keys may be missing
   protected readonly upiInfo = signal(false); // the "add your Razorpay keys" box
+  protected readonly ownUpi = signal(false); // the shop added its own UPI ID or QR picture
+  protected readonly ownQr = signal<{ kind: 'upi-link' | 'picture'; imageUrl: string; upiId: string | null; payeeName: string | null; amount: number } | null>(null);
+  protected readonly ownBusy = signal(false);
+  protected readonly ownPaid = signal<number | null>(null); // the cashier saw this amount arrive on the shop's own QR
   protected readonly canManagePay = computed(() => this.auth.hasPermission('user.manage'));
   protected readonly collecting = signal(false);
   protected readonly qr = signal<{ qrId: string; imageUrl: string; amount: number; expiresAt: number } | null>(null);
@@ -439,7 +472,7 @@ export class Pos {
 
   constructor() {
     this.ctx.load();
-    this.api.upiEnabled().subscribe({ next: (r) => { this.upiEnabled.set(r.enabled); this.upiInPlan.set(r.includedInPlan); }, error: () => this.upiEnabled.set(false) });
+    this.api.upiEnabled().subscribe({ next: (r) => { this.upiEnabled.set(r.enabled); this.upiInPlan.set(r.includedInPlan); this.ownUpi.set(!!r.ownUpi); }, error: () => this.upiEnabled.set(false) });
     effect(() => {
       const outlet = this.outletId();
       untracked(() => this.loadHolds(outlet));
@@ -494,6 +527,30 @@ export class Pos {
       this.collecting.set(false);
       this.error.set(e instanceof Error && !('status' in e) ? e.message : apiError(e));
     }
+  }
+
+  /** Shows the shop's own QR with this bill's UPI amount. The cashier presses Payment received once the money is seen. */
+  protected showOwnQr() {
+    this.error.set(null);
+    const amount = this.upiAmount();
+    if (amount < 1) return this.error.set('The UPI amount must be at least ₹1.');
+    this.ownBusy.set(true);
+    this.api.upiOwnQr(amount).subscribe({
+      next: (r) => {
+        this.ownBusy.set(false);
+        this.ownQr.set(r);
+      },
+      error: (e) => {
+        this.ownBusy.set(false);
+        this.error.set(apiError(e));
+      },
+    });
+  }
+
+  protected ownReceived() {
+    const q = this.ownQr();
+    if (q) this.ownPaid.set(q.amount);
+    this.ownQr.set(null);
   }
 
   /** the customer's 10-digit mobile number, if one was typed, so Checkout does not ask for it again */
@@ -758,6 +815,7 @@ export class Pos {
   protected clear() {
     if (this.upiPaid() && !confirm('UPI money has already been received for this bill. Clearing it leaves that payment without a bill. Continue?')) return;
     this.upiPaid.set(null);
+    this.ownPaid.set(null);
     this.cart.set([]);
     this.rx.set({});
     this.error.set(null);
@@ -815,6 +873,7 @@ export class Pos {
           this.done.set({ id: s._id, number: s.number, grand: s.totals.grand });
           this.rxTried.set(false);
           this.upiPaid.set(null);
+          this.ownPaid.set(null);
           this.cart.set([]);
           this.rx.set({});
           this.customerName.set('');

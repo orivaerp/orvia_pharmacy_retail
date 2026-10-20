@@ -12,6 +12,13 @@ interface Settings {
   hasWebhookSecret: boolean;
   webhookUrl: string;
   canSaveKeys: boolean;
+  gatewayAllowed: boolean;
+  updatedAt: string | null;
+}
+interface OwnUpi {
+  upiId: string | null;
+  payeeName: string | null;
+  qrImage: string | null;
   updatedAt: string | null;
 }
 interface Unclaimed {
@@ -34,7 +41,51 @@ interface Unclaimed {
     @if (error()) { <p role="alert" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{{ error() }}</p> }
     @if (notice()) { <p class="mt-3 rounded-xl bg-tone-lime px-3 py-2 text-xs">{{ notice() }}</p> }
 
+    <section class="card mt-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-medium">Your own UPI ID / QR</h2>
+        <span class="badge" [class]="own()?.upiId || own()?.qrImage ? 'bg-tone-lime' : 'bg-chip'">{{ own()?.upiId || own()?.qrImage ? 'added' : 'not added' }}</span>
+      </div>
+      <p class="mt-1 text-xs text-ink-soft">Add the UPI ID (or the QR) you already use for your shop. At the counter, choose UPI and Orvia shows a QR with the bill amount in it. The customer pays straight into your bank account; when you see the money arrive, press <b>Payment received</b>. This works for every shop, with no payment gateway.</p>
+      <form class="mt-3 grid gap-3 sm:grid-cols-2" (ngSubmit)="saveOwn()" autocomplete="off">
+        <div><label class="label" for="u-id">UPI ID</label><input id="u-id" name="upiId" class="field" placeholder="shopname@okhdfcbank" [(ngModel)]="upiId" autocomplete="off" /></div>
+        <div><label class="label" for="u-nm">Name shown to the customer</label><input id="u-nm" name="payeeName" class="field" placeholder="Your shop name" [(ngModel)]="payeeName" maxlength="80" /></div>
+        <div class="sm:col-span-2">
+          <label class="label" for="u-img">Your QR picture (optional; PNG or JPG, up to 250 KB)</label>
+          <input id="u-img" type="file" accept="image/png,image/jpeg" class="field sm:max-w-sm" (change)="pickImage($event)" />
+          @if (picture()) {
+            <div class="mt-2 flex items-center gap-3">
+              <img [src]="picture()" alt="Your UPI QR" class="h-28 w-28 rounded-xl border border-line bg-white object-contain" />
+              <button type="button" class="btn btn-ghost" (click)="picture.set(null)">Remove picture</button>
+            </div>
+          }
+          <p class="mt-1 text-[11px] text-ink-soft">With a UPI ID, Orvia makes a fresh QR for each bill with the amount filled in. A picture alone is shown as it is, so the customer types the amount.</p>
+        </div>
+        <div class="flex flex-wrap gap-2 sm:col-span-2">
+          <button class="btn btn-primary" type="submit" [disabled]="busy()">Save UPI details</button>
+          @if (own()?.upiId || own()?.qrImage) { <button class="btn btn-ghost" type="button" [disabled]="busy()" (click)="removeOwn()">Remove</button> }
+        </div>
+      </form>
+    </section>
+
     @if (s(); as st) {
+      @if (!st.gatewayAllowed) {
+        <section class="card mt-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-sm font-medium">Online UPI with Razorpay (payment gateway)</h2>
+            <span class="badge bg-chip">not active</span>
+          </div>
+          <p class="mt-1 text-xs text-ink-soft">With the gateway, Orvia confirms the payment by itself and fills it into the bill, with no one watching the phone. It is switched on shop by shop. To get it for your shop:</p>
+          <ol class="mt-2 list-decimal space-y-1.5 pl-5 text-xs">
+            <li>Have your own <b>Razorpay account</b> with KYC done and the account <b>activated for live payments</b>.</li>
+            <li>In the Razorpay Dashboard go to <b>Account &amp; Settings &rarr; Website and app details</b> and add <b>https://pharmacy.orviaerp.com</b>. Wait until Razorpay approves it. Without this approval Razorpay refuses the payments with <i>"Business &ndash; Website Mismatch"</i>.</li>
+            <li>In the same Dashboard create your <b>API keys</b> (Key ID and Key secret) and keep them ready. If you want, also create a <b>webhook secret</b>.</li>
+            <li>Ask the <b>Orvia team</b> to switch on online UPI for your shop. Tell them your shop name and that the Razorpay website is approved.</li>
+            <li>Come back to this page. The box to add your keys appears here once it is switched on.</li>
+          </ol>
+          <p class="mt-2 text-[11px] text-ink-soft">Until then, use your own UPI ID / QR above. It works right away.</p>
+        </section>
+      } @else {
       <section class="card mt-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="text-sm font-medium">Razorpay account</h2>
@@ -77,6 +128,7 @@ interface Unclaimed {
         @if (st.source === 'shop' && !st.hasWebhookSecret) { <p class="mt-2 text-[11px] text-red-700">No webhook secret saved yet, so webhook calls are being ignored.</p> }
         @if (st.webhookUrl.includes('localhost')) { <p class="mt-2 text-[11px] text-ink-soft">This address only works once Orvia is on a public server.</p> }
       </section>
+      }
     }
 
     <section class="card mt-3">
@@ -106,13 +158,70 @@ export class Payments {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly notice = signal<string | null>(null);
+  protected readonly own = signal<OwnUpi | null>(null);
+  protected readonly picture = signal<string | null>(null);
+  protected upiId = '';
+  protected payeeName = '';
   protected keyId = '';
   protected keySecret = '';
   protected webhookSecret = '';
 
   constructor() {
     this.http.get<Settings>(`${this.url}/settings`).subscribe({ next: (v) => this.s.set(v), error: (e) => this.error.set(apiError(e)) });
+    this.http.get<OwnUpi>(`${this.url}/upi/own`).subscribe({ next: (v) => this.setOwn(v), error: () => undefined });
     this.http.get<Unclaimed[]>(`${this.url}/upi/unclaimed`).subscribe({ next: (v) => this.unclaimed.set(v), error: () => this.unclaimed.set([]) });
+  }
+
+  private setOwn(v: OwnUpi) {
+    this.own.set(v);
+    this.upiId = v.upiId ?? '';
+    this.payeeName = v.payeeName ?? '';
+    this.picture.set(v.qrImage);
+  }
+
+  protected pickImage(ev: Event) {
+    const f = (ev.target as HTMLInputElement).files?.[0];
+    if (!f) return;
+    this.error.set(null);
+    if (!/^image\/(png|jpeg)$/.test(f.type)) return void this.error.set('Choose a PNG or JPG picture of your QR.');
+    if (f.size > 250 * 1024) return void this.error.set('That picture is too big (over 250 KB). Use a smaller screenshot of your QR.');
+    const r = new FileReader();
+    r.onload = () => this.picture.set(String(r.result));
+    r.readAsDataURL(f);
+  }
+
+  protected saveOwn() {
+    this.error.set(null);
+    this.notice.set(null);
+    if (!this.upiId.trim() && !this.picture()) return this.error.set('Enter your UPI ID, or add a picture of your QR.');
+    this.busy.set(true);
+    this.http.put<OwnUpi>(`${this.url}/upi/own`, { upiId: this.upiId.trim(), payeeName: this.payeeName.trim(), qrImage: this.picture() ?? '' }).subscribe({
+      next: (v) => {
+        this.busy.set(false);
+        this.setOwn(v);
+        this.notice.set('UPI details saved. Choose UPI at the counter to show your QR.');
+      },
+      error: (e) => {
+        this.busy.set(false);
+        this.error.set(apiError(e));
+      },
+    });
+  }
+
+  protected removeOwn() {
+    if (!confirm('Remove your UPI ID and QR from Orvia?')) return;
+    this.busy.set(true);
+    this.http.delete<OwnUpi>(`${this.url}/upi/own`).subscribe({
+      next: (v) => {
+        this.busy.set(false);
+        this.setOwn(v);
+        this.notice.set('Your UPI details were removed.');
+      },
+      error: (e) => {
+        this.busy.set(false);
+        this.error.set(apiError(e));
+      },
+    });
   }
 
   protected save() {

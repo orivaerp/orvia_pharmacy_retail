@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
+import QRCode from 'qrcode';
 import { z } from 'zod';
 import { env } from '../../config/env.js';
 import { PERMISSIONS as P } from '../../constants/permissions.js';
@@ -9,7 +10,9 @@ import { ApiError } from '../../utils/ApiError.js';
 import { canEncrypt, encrypt } from '../../utils/secretBox.js';
 import { audit } from '../audit/audit.model.js';
 import { hasFeature, requireFeature } from '../plans/plan.service.js';
+import { Tenant } from '../tenants/tenant.model.js';
 import { PaymentSettings } from './payment-settings.model.js';
+import { ShopUpi } from './shop-upi.model.js';
 import { OnlinePayment } from './payment.model.js';
 import * as rzp from './razorpay.js';
 
@@ -20,16 +23,46 @@ const canCollect = requirePermission(P.SALES_CREATE);
 const canManage = requirePermission(P.USER_MANAGE);
 const objectId = z.string().refine((v) => mongoose.isValidObjectId(v), 'Invalid id');
 
+/** The provider switches online UPI (the gateway) on shop by shop; until then it is off. */
+const gatewayAllowed = async (tenantId) => Boolean((await Tenant.findById(tenantId).select('onlineGateway').lean())?.onlineGateway);
+const requireGateway = async (req, _res, next) => {
+  try {
+    if (!(await gatewayAllowed(req.user.tenantId))) throw ApiError.forbidden('Online UPI is not switched on for your shop. Open Accounts > Payments to see how to get it activated.');
+    next();
+  } catch (e) {
+    next(e);
+  }
+};
+
 // ---------------------------------------------------------------- collecting at the counter
 router.get('/upi/config', canCollect, async (req, res) => {
   const creds = await rzp.credsForShop();
-  const included = await hasFeature(req.user.tenantId, 'onlinePayments');
-  // enabled = the shop has its own keys and the plan allows it; includedInPlan with no keys makes the counter explain how to connect Razorpay
-  res.json({ enabled: Boolean(creds) && included, includedInPlan: included, hasOwnKeys: Boolean(creds), mode: creds ? rzp.modeOf(creds.keyId) : null });
+  const [included, allowed, own] = await Promise.all([hasFeature(req.user.tenantId, 'onlinePayments'), gatewayAllowed(req.user.tenantId), ShopUpi.findOne().lean()]);
+  // enabled = the provider switched it on, the shop has its own keys and the plan allows it
+  // includedInPlan (switched on, no keys yet) makes the counter explain how to connect Razorpay
+  res.json({
+    enabled: allowed && Boolean(creds) && included,
+    includedInPlan: allowed && included,
+    gatewayAllowed: allowed,
+    hasOwnKeys: Boolean(creds),
+    mode: creds ? rzp.modeOf(creds.keyId) : null,
+    ownUpi: own && (own.upiId || own.qrImage) ? { upiId: own.upiId ?? null, payeeName: own.payeeName ?? null, hasImage: Boolean(own.qrImage) } : null,
+  });
+});
+
+// the shop's own QR for a bill: a UPI link with the amount in it (or the shop's printed QR picture when it has no UPI ID)
+router.post('/upi/own/qr', canCollect, validateBody(z.object({ amount: z.number().min(1).max(200_000), note: z.string().trim().max(40).optional() })), async (req, res) => {
+  const own = await ShopUpi.findOne().lean();
+  if (!own || !(own.upiId || own.qrImage)) throw ApiError.badRequest('Add your UPI ID or QR under Accounts > Payments first.');
+  if (own.upiId) {
+    const link = `upi://pay?pa=${encodeURIComponent(own.upiId)}&pn=${encodeURIComponent(own.payeeName || 'Pharmacy')}&am=${req.body.amount.toFixed(2)}&cu=INR${req.body.note ? '&tn=' + encodeURIComponent(req.body.note) : ''}`;
+    return res.json({ kind: 'upi-link', imageUrl: await QRCode.toDataURL(link, { margin: 1, width: 360 }), upiId: own.upiId, payeeName: own.payeeName ?? null, amount: req.body.amount });
+  }
+  res.json({ kind: 'picture', imageUrl: own.qrImage, upiId: null, payeeName: own.payeeName ?? null, amount: req.body.amount });
 });
 
 // 1. open an order for the UPI part of a bill
-router.post('/upi/orders', canCollect, requireFeature('onlinePayments'), validateBody(z.object({ branchId: objectId, amount: z.number().min(1).max(200_000) })), async (req, res) => {
+router.post('/upi/orders', canCollect, requireGateway, requireFeature('onlinePayments'), validateBody(z.object({ branchId: objectId, amount: z.number().min(1).max(200_000) })), async (req, res) => {
   assertBranchAllowed(req, req.body.branchId);
   const creds = await rzp.credsForShop();
   const amountPaise = Math.round(req.body.amount * 100);
@@ -41,7 +74,7 @@ router.post('/upi/orders', canCollect, requireFeature('onlinePayments'), validat
 // 1b. a QR on screen (nothing for the customer to open): create it, then poll until it is paid
 const QR_MINUTES = 10;
 
-router.post('/upi/qr', canCollect, requireFeature('onlinePayments'), validateBody(z.object({ branchId: objectId, amount: z.number().min(1).max(200_000) })), async (req, res) => {
+router.post('/upi/qr', canCollect, requireGateway, requireFeature('onlinePayments'), validateBody(z.object({ branchId: objectId, amount: z.number().min(1).max(200_000) })), async (req, res) => {
   assertBranchAllowed(req, req.body.branchId);
   const creds = await rzp.credsForShop();
   if (!creds) throw ApiError.badRequest('Add your own Razorpay keys (Accounts > Payments) to collect UPI online.');
@@ -142,6 +175,7 @@ const view = async (req) => {
     hasWebhookSecret: Boolean(s?.webhookSecretEnc),
     webhookUrl: `${env.PUBLIC_API_URL.replace(/\/$/, '')}/api/v1/webhooks/razorpay/${req.user.tenantId}`,
     canSaveKeys: canEncrypt(),
+    gatewayAllowed: await gatewayAllowed(req.user.tenantId),
     updatedAt: s?.updatedAt ?? null,
   };
 };
@@ -159,6 +193,7 @@ router.put(
     }),
   ),
   async (req, res) => {
+    if (!(await gatewayAllowed(req.user.tenantId))) throw ApiError.forbidden('Online UPI is not switched on for your shop yet. Ask the Orvia team to activate it, then add your keys.');
     if (!canEncrypt()) throw ApiError.badRequest('Saving payment keys is not enabled on this server (SETTINGS_ENCRYPTION_KEY is not set).');
     const { keyId, keySecret, webhookSecret } = req.body;
     await rzp.checkKeys({ keyId, keySecret }); // refuses keys Razorpay does not accept
@@ -174,6 +209,42 @@ router.delete('/settings', canManage, async (req, res) => {
   await PaymentSettings.deleteOne({ gateway: 'razorpay' });
   await audit(req, 'payments.keys.remove', req.user.tenantId, {});
   res.json(await view(req));
+});
+
+// ---------------------------------------------------------------- the shop's own UPI ID / QR picture (no gateway needed)
+const ownView = async () => {
+  const o = await ShopUpi.findOne().lean();
+  return { upiId: o?.upiId ?? null, payeeName: o?.payeeName ?? null, qrImage: o?.qrImage ?? null, updatedAt: o?.updatedAt ?? null };
+};
+
+router.get('/upi/own', canManage, async (_req, res) => res.json(await ownView()));
+
+router.put(
+  '/upi/own',
+  canManage,
+  validateBody(
+    z.object({
+      upiId: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{2,64}@[a-z][a-z0-9.-]{1,40}$/, 'That does not look like a UPI ID (for example shopname@okhdfcbank)').optional().or(z.literal('').transform(() => undefined)),
+      payeeName: z.string().trim().max(80).optional(),
+      qrImage: z.string().max(400_000).regex(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/, 'The QR picture must be a PNG or JPG').optional().or(z.literal('').transform(() => undefined)),
+      keepImage: z.boolean().optional(),
+    }),
+  ),
+  async (req, res) => {
+    const { upiId, payeeName, qrImage, keepImage } = req.body;
+    const current = await ShopUpi.findOne();
+    const image = qrImage ?? (keepImage ? current?.qrImage : undefined);
+    if (!upiId && !image) throw ApiError.badRequest('Enter your UPI ID, or add a picture of your QR.');
+    await ShopUpi.findOneAndUpdate({}, { $set: { upiId: upiId ?? null, payeeName: payeeName || null, qrImage: image ?? null, updatedBy: req.user.id } }, { upsert: true, new: true });
+    await audit(req, 'payments.upi.set', req.user.tenantId, { upiId: upiId ?? null, picture: Boolean(image) });
+    res.json(await ownView());
+  },
+);
+
+router.delete('/upi/own', canManage, async (req, res) => {
+  await ShopUpi.deleteMany({});
+  await audit(req, 'payments.upi.remove', req.user.tenantId, {});
+  res.json(await ownView());
 });
 
 export default router;

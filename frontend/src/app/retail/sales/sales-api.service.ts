@@ -80,7 +80,8 @@ export interface SaleRow {
   customerPhone?: string;
   branchId: { _id: string; name: string; code: string } | null;
   totals: SaleTotals;
-  payments: { mode: PayMode; amount: number }[];
+  /** paymentId / orderId / gateway are set when the money came in through Razorpay: paymentId is the transaction number */
+  payments: { mode: PayMode; amount: number; paymentId?: string; orderId?: string; gateway?: string }[];
   status: 'COMPLETED' | 'RETURNED' | 'CANCELLED';
   soldByName?: string;
   /** B2B when the customer has a GSTIN; interState means the tax is IGST */
@@ -176,7 +177,12 @@ export class SalesApi {
   }
 
   upiEnabled() {
-    return this.http.get<{ enabled: boolean; includedInPlan: boolean; hasOwnKeys: boolean }>(`${environment.apiUrl}/payments/upi/config`);
+    return this.http.get<{ enabled: boolean; includedInPlan: boolean; gatewayAllowed: boolean; hasOwnKeys: boolean; ownUpi: { upiId: string | null; payeeName: string | null; hasImage: boolean } | null }>(`${environment.apiUrl}/payments/upi/config`);
+  }
+
+  /** the shop's own QR for this amount (a UPI link with the amount in it, or the shop's own QR picture) */
+  upiOwnQr(amount: number, note?: string) {
+    return this.http.post<{ kind: 'upi-link' | 'picture'; imageUrl: string; upiId: string | null; payeeName: string | null; amount: number }>(`${environment.apiUrl}/payments/upi/own/qr`, { amount, note });
   }
 
   upiOrder(branchId: string, amount: number) {

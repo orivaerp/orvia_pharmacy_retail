@@ -56,6 +56,7 @@ export interface Shop {
   gstin?: string;
   phone?: string;
   address?: string;
+  onlineGateway?: boolean;
   createdAt: string;
 }
 
@@ -213,6 +214,10 @@ export class ProviderApi {
 
   setShopOutletActive(id: string, branchId: string, active: boolean) {
     return this.http.post<Outlet>(`${this.base}/tenants/${id}/outlets/${branchId}/${active ? 'activate' : 'deactivate'}`, {});
+  }
+
+  setGateway(id: string, enabled: boolean) {
+    return this.http.patch<{ onlineGateway: boolean }>(`${this.base}/tenants/${id}/gateway`, { enabled });
   }
 
   setExtraOutlets(id: string, extraOutlets: number) {

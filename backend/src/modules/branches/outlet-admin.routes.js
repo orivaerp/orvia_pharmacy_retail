@@ -83,6 +83,16 @@ shopOutletsRouter.patch('/tenants/:id/limits', requirePermission(P.TENANT_MANAGE
   res.json(limits);
 });
 
+// online UPI through the shop's own payment gateway: off for every shop until the provider switches it on here
+shopOutletsRouter.patch('/tenants/:id/gateway', requirePermission(P.TENANT_MANAGE), validateBody(z.object({ enabled: z.boolean() })), async (req, res) => {
+  const tenant = await requireTenantDoc(req.params.id);
+  const before = Boolean(tenant.onlineGateway);
+  tenant.onlineGateway = req.body.enabled;
+  await tenant.save();
+  await audit(req, 'tenant.gateway', tenant._id, { from: before, to: req.body.enabled });
+  res.json({ onlineGateway: tenant.onlineGateway });
+});
+
 // ---- /provider/outlet-requests ----
 export const outletRequestsRouter = Router();
 

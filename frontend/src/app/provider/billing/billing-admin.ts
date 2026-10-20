@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { BillingState, InvoiceRow, STATE_CLASS, STATE_LABEL } from '../../shared/billing/billing-types';
-import { printInvoice } from '../../shared/billing/print-invoice';
+import { InvoiceParty, printInvoice } from '../../shared/billing/print-invoice';
 import { Page, apiError } from '../../shared/utils/api';
 
 interface Overview extends Page<InvoiceRow> {
@@ -197,7 +197,12 @@ export class BillingAdmin {
   }
 
   protected print(i: InvoiceRow) {
-    printInvoice(i, {}, { name: i.tenantName });
+    this.http.get<{ invoice: InvoiceRow; shop: InvoiceParty; company: InvoiceParty }>(`${url}/invoices/${i._id}/print`).subscribe({
+      next: (r) => {
+        if (!printInvoice(r.invoice, r.company, r.shop)) this.error.set('The print window was blocked. Allow pop-ups for this site.');
+      },
+      error: (e) => this.error.set(apiError(e)),
+    });
   }
 }
 

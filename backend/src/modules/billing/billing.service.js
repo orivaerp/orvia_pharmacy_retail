@@ -20,7 +20,21 @@ const billingUrl = () => `${env.FRONTEND_URL}/retail/billing`;
 /** The company details printed on an invoice. */
 export const companyInfo = () => {
   const s = settings();
-  return { name: s.companyName, address: s.companyAddress, gstin: s.companyGstin, bankDetails: s.bankDetails };
+  return {
+    name: s.companyName,
+    address: s.companyAddress,
+    gstin: s.companyGstin,
+    bankDetails: s.bankDetails,
+    pan: s.companyPan,
+    phone: s.companyPhone,
+    email: s.companyEmail,
+    website: s.companyWebsite,
+    logo: s.companyLogo,
+    note: s.invoiceNote,
+    terms: s.invoiceTerms,
+    layout: s.invoiceLayout,
+    accent: s.invoiceAccent,
+  };
 };
 
 async function ownerOf(tenant) {

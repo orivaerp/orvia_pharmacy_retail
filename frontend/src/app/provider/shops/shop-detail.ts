@@ -151,6 +151,11 @@ export class ShopDetailPage {
     this.run(this.api.setShopOutletActive(this.id(), o._id, !o.isActive), o.isActive ? 'Outlet closed.' : 'Outlet reopened.');
   }
 
+  protected toggleGateway() {
+    const on = !this.tenant()?.onlineGateway;
+    this.run(this.api.setGateway(this.id(), on), on ? 'Online UPI is now switched on for this shop.' : 'Online UPI is switched off for this shop.');
+  }
+
   protected saveExtra() {
     this.run(this.api.setExtraOutlets(this.id(), Math.max(0, Math.floor(Number(this.extra) || 0))), 'Outlet limit updated.');
   }

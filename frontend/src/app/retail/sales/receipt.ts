@@ -86,6 +86,7 @@ ${sale.totals.discount ? `<tr><td colspan="3">Discount</td><td class="r">-${mone
 ${sale.totals.roundOff ? `<tr><td colspan="3">Round off</td><td class="r">${money(sale.totals.roundOff)}</td></tr>` : ''}
 <tr class="t"><td colspan="3">TOTAL</td><td class="r">${money(sale.totals.grand)}</td></tr></table>
 <p>Paid: ${sale.payments.map((p) => `${p.mode} ${money(p.amount)}`).join(', ')}</p>
+${sale.payments.filter((p) => p.paymentId).map((p) => `<p><small>Txn no. ${esc(p.paymentId ?? '')}</small></p>`).join('')}
 <table><tr><th>Tax</th><th class="r">Taxable</th><th class="r"></th><th class="r"></th></tr>${gstRows}</table>
 <p class="c">MRP is inclusive of GST. Thank you!</p>
 ${autoPrint ? '<script>window.onload=function(){window.print()}</script>' : ''}

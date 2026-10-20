@@ -12,6 +12,8 @@ const tenantSchema = new mongoose.Schema(
     // a product with no reorder level of its own counts as low at or below this many packs (0 = alert off)
     lowStockDefault: { type: Number, default: 5, min: 0 },
     extraOutlets: { type: Number, default: 0, min: 0 }, // granted by the provider on top of the plan's outlet limit
+    // online UPI through the shop's own payment gateway: off for everyone until the provider switches it on for that shop
+    onlineGateway: { type: Boolean, default: false },
     signupSource: { type: String, enum: ['provider', 'self'], default: 'provider' }, // who made this shop
     termsAcceptedAt: Date,
     suspendedAt: Date,

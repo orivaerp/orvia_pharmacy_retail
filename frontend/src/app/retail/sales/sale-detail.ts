@@ -94,7 +94,12 @@ import { PAY_MODES, PayMode, SaleDetail, SalesApi } from './sales-api.service';
         <section class="card">
           <h2 class="text-sm font-medium">Customer and payment</h2>
           <p class="mt-1 text-xs">@if (s.customerId) { <a [routerLink]="['/retail/customers', s.customerId]" class="underline">{{ s.customerName }}</a> } @else { {{ s.customerName || 'Walk-in customer' }} } {{ s.customerPhone ? '· ' + s.customerPhone : '' }}</p>
-          @for (p of s.payments; track $index) { <p class="text-xs text-ink-soft">{{ p.mode }}: {{ p.amount | currency: 'INR' : 'symbol' : '1.2-2' }}</p> }
+          @for (p of s.payments; track $index) {
+            <p class="text-xs text-ink-soft">{{ p.mode }}: {{ p.amount | currency: 'INR' : 'symbol' : '1.2-2' }}</p>
+            @if (p.paymentId) {
+              <p class="mb-1 text-[11px] text-ink-soft">Razorpay transaction no. <span class="select-all font-mono text-ink">{{ p.paymentId }}</span>@if (p.orderId) { <span> · order {{ p.orderId }}</span> }</p>
+            }
+          }
           @if (s.prescriber?.doctorName) {
             <h2 class="mt-3 text-sm font-medium">Prescription</h2>
             <p class="text-xs">Dr {{ s.prescriber!.doctorName }}{{ s.prescriber!.regNo ? ' (Reg ' + s.prescriber!.regNo + ')' : '' }} · Patient {{ s.prescriber!.patientName }}{{ s.prescriber!.patientAge ? ', ' + s.prescriber!.patientAge + ' yrs' : '' }}</p>

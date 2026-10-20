@@ -94,6 +94,20 @@
     </section>
   </div>
 
+  <!-- Online UPI (payment gateway) -->
+  <section class="card mt-3">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h2 class="text-base font-medium">Online UPI (payment gateway)</h2>
+        <p class="text-[11px] text-ink-soft">Off for every shop by default. When on, the shop owner can add their own Razorpay keys and take UPI at the counter. Their own UPI ID / QR works either way.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="badge" [class]="tenant()?.onlineGateway ? 'bg-tone-lime' : 'bg-chip'">{{ tenant()?.onlineGateway ? 'On' : 'Off' }}</span>
+        <button type="button" class="btn" [class]="tenant()?.onlineGateway ? 'btn-ghost' : 'btn-primary'" [disabled]="busy()" (click)="toggleGateway()">{{ tenant()?.onlineGateway ? 'Switch off' : 'Switch on' }}</button>
+      </div>
+    </div>
+  </section>
+
   <!-- Outlets -->
   <section class="card mt-3">
     <div class="flex flex-wrap items-center justify-between gap-2">

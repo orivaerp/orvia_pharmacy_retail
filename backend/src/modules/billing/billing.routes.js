@@ -64,6 +64,15 @@ providerBillingRouter.get('/', async (req, res) => {
   );
 });
 
+// everything the print page needs for one invoice: the invoice, the shop it is billed to, and our company details
+providerBillingRouter.get('/invoices/:id/print', async (req, res) => {
+  if (!oidOk(req.params.id)) throw ApiError.notFound('Invoice not found');
+  const invoice = await Invoice.findById(req.params.id).lean();
+  if (!invoice) throw ApiError.notFound('Invoice not found');
+  const shop = await Tenant.findById(invoice.tenantId).select('name address gstin phone drugLicenseNo').lean();
+  res.json({ invoice, shop: shop ?? { name: invoice.tenantName }, company: svc.companyInfo() });
+});
+
 providerBillingRouter.post('/run', async (req, res) => {
   const r = await svc.runBillingCycle();
   await audit(req, 'billing.run', undefined, r);
